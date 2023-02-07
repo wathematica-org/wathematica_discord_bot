@@ -1,0 +1,11 @@
+version: '3'
+services:
+  bot:
+    container_name: discord_bot
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ./wathematica_discord_bot:/app_root
+    working_dir: '/app_root'
+    command: 'python3 app.py'

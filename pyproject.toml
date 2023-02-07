@@ -1,0 +1,21 @@
+[tool.poetry]
+name = "wathematica-discord-bot"
+version = "0.1.0"
+description = ""
+authors = ["Takaaki Toda <todatakaaki@gmail.com>"]
+readme = "README.md"
+packages = [{include = "wathematica_discord_bot"}]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+py-cord = "^2.3.2"
+
+
+[tool.poetry.group.dev.dependencies]
+black = "^23.1.0"
+ruff = "^0.0.241"
+pyright = "^1.1.292"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

@@ -10,7 +10,7 @@ ENV PYTHONUNBUFFERED=1 \
 
 ENV PATH="$POETRY_HOME/bin:$PATH"
 
-RUN apt-get update && apt-get install --no-install-recommends -y curl
+RUN apt-get update && apt-get install --no-install-recommends -y curl ca-certificates
 
 RUN curl -sSL https://install.python-poetry.org | python3 -
 

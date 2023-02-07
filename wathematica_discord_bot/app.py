@@ -1,3 +1,4 @@
+import os
 from typing import Optional
 
 import discord
@@ -36,8 +37,13 @@ if __name__ == "__main__":
     bot.load_extension("Cogs.admin_tools")
     bot.load_extension("Cogs.seminar_controllers")
     bot.load_extension("Cogs.user_controllers")
-    with open(".credential") as credential_file:
-        # Strip the tailing newline character with strip()
-        token = credential_file.readline().strip()
-    # Launch bot
-    bot.run(token)
+    if os.path.exists(".credential"):
+        with open(".credential") as credential_file:
+            # Strip the tailing newline character with strip()
+            token = credential_file.readline().strip()
+        # Launch bot
+        bot.run(token)
+    else:
+        raise FileNotFoundError(
+            "[No credential file was found!] Contact admin and get the .credential file, which contains secret token, |||"
+        )

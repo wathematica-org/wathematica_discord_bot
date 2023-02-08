@@ -81,13 +81,11 @@ class New(commands.Cog):
                     await ctx.respond(embed=embed)
                     return
 
-        new_text_channel = await ut.create_text_channel(
-            category=await ut.get_category_by_category_name(
-                guild=ctx.guild,
-                category_name=config.category_names["pending_seminars"],
-            ),
-            channel_name=seminar_name.lower(),
+        category = await ut.get_category_by_category_name(
+            guild=ctx.guild,
+            category_name=config.category_names["pending_seminars"],
         )
+        new_text_channel = await category.create_text_channel(name=seminar_name)
         await ctx.guild.create_role(name=seminar_name, mentionable=True)
 
         embed = discord.Embed(

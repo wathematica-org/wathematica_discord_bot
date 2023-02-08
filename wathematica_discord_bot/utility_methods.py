@@ -72,26 +72,6 @@ async def get_role_by_role_name(
             return role
 
 
-async def create_text_channel(category: discord.CategoryChannel, channel_name: str):
-    """
-    create a text channel named channel_name in the specified category.
-
-    Parameters
-    ----------
-    category: discord.CategoryChannel
-        the category to create a channel in.
-    channel_name: str
-        name of the text channel to be created.
-
-    Returns
-    ----------
-    new_channel: discord.TextChannel
-        the newly created text channel.
-    """
-    new_channel = await category.create_text_channel(name=channel_name)
-    return new_channel
-
-
 async def delete_message_with_message_id(message_id: int):
     """
     delete a message whose id is message_id.

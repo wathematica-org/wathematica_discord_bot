@@ -3,6 +3,7 @@
 
 ### My Settings ###
 .credential
+database.db
 
 ### Python ###
 # Byte-compiled / optimized / DLL files

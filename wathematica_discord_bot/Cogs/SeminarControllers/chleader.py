@@ -102,7 +102,7 @@ class ChangeLeader(commands.Cog):
 
         embed = discord.Embed(
             title="<:white_check_mark:960095096563466250> ゼミ長更新成功",
-            description=f"このゼミのゼミ長が `{new_leader.mention}` になりました。",
+            description=f"このゼミのゼミ長が {new_leader.mention} になりました。",
             color=discord.Colour.brand_green(),
         )
         await ctx.respond(embed=embed)

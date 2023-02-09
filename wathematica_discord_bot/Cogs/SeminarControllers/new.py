@@ -25,6 +25,8 @@ class New(commands.Cog):
         ctx: discord.ApplicationContext,
         seminar_name: Option(input_type=str, description="新規ゼミ名", required=True),  # type: ignore
     ):
+        seminar_name = seminar_name.lower()  # discord channel names should be lowercase
+
         # Check whether a text channel named {seminar_name} already exists
         if await ut.get_text_channel_by_channel_name(
             scope=ctx.guild, channel_name=seminar_name

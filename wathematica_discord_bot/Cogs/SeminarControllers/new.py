@@ -1,9 +1,13 @@
+import datetime
+
 import config
 import discord
 import utility_methods as ut
+from database import async_session
 from discord import Option
 from discord.commands import slash_command
 from discord.ext import commands
+from model import Seminar, SeminarState
 
 
 class New(commands.Cog):
@@ -86,7 +90,21 @@ class New(commands.Cog):
             category_name=config.category_names["pending_seminars"],
         )
         new_text_channel = await category.create_text_channel(name=seminar_name)
-        await ctx.guild.create_role(name=seminar_name, mentionable=True)
+        new_role = await ctx.guild.create_role(name=seminar_name, mentionable=True)
+
+        # add this seminar to the database
+        seminar = Seminar(
+            name=seminar_name,
+            created_at=datetime.datetime.now(),
+            finished_at=None,
+            seminar_state=SeminarState.PENDING,
+            leader_id=ctx.author.id,
+            channel_id=new_text_channel.id,
+            role_id=new_role.id,
+        )
+        async with async_session() as session:
+            async with session.begin():
+                session.add(seminar)
 
         embed = discord.Embed(
             title="<:white_check_mark:960095096563466250> チャンネル作成成功",
@@ -117,6 +135,13 @@ class New(commands.Cog):
         await message_to_role_settings_channel.add_reaction(
             "<:interesting:836259755302453299>"
         )
+
+        embed = discord.Embed(
+            title="<:white_check_mark:960095096563466250> ゼミ作成成功",
+            description=f"`{ctx.author.mention}` をゼミ長として登録しました。",
+            color=discord.Colour.brand_green(),
+        )
+        await new_text_channel.send(embed=embed)
 
         # Prompt users to get the role at role_settings channel
         embed = discord.Embed(

@@ -1,8 +1,14 @@
+import datetime
+
 import config
 import discord
 import utility_methods as ut
+from database import async_session
 from discord.commands import slash_command
 from discord.ext import commands
+from model import Seminar, SeminarState
+from sqlalchemy import select
+from sqlalchemy.exc import NoResultFound
 
 
 class End(commands.Cog):
@@ -17,15 +23,40 @@ class End(commands.Cog):
     )
     async def end(self, ctx: discord.ApplicationContext):
 
-        # this command require the user to have manage_channel permission
-        if not ctx.author.guild_permissions.manage_channels:
-            embed = discord.Embed(
-                title="<:x:960095353577807883> ゼミ終了処理失敗",
-                description="当該操作に必要な権限が不足しています。",
-                color=discord.Colour.red(),
-            )
-            await ctx.respond(embed=embed)
-            return
+        # this command must be executed by the leader of the seminar
+        # or by someone who has the manage_channels permission
+        async with async_session() as session:
+            async with session.begin():
+                # TODO: this implementation using 'operation_permitted' flag is due to the fact
+                # that there are seminars that are not registered in the database.
+                # Since this implementation is not very good, refactoring should be considered
+                # after database entries are completed.
+                operation_permitted = True
+                try:
+                    this_seminar: Seminar = (
+                        await session.execute(
+                            select(Seminar).where(Seminar.channel_id == ctx.channel.id)
+                        )
+                    ).scalar_one()
+                    current_leader_id = this_seminar.leader_id
+                except NoResultFound:
+                    if not ctx.author.guild_permissions.manage_channels:
+                        operation_permitted = False
+                else:
+                    if not (
+                        current_leader_id == ctx.author.id
+                        or ctx.author.guild_permissions.manage_channels
+                    ):
+                        operation_permitted = False
+                finally:
+                    if not operation_permitted:
+                        embed = discord.Embed(
+                            title="<:x:960095353577807883> ゼミ終了処理失敗",
+                            description="現在のゼミ長のみがゼミを終了できます。",
+                            color=discord.Colour.red(),
+                        )
+                        await ctx.respond(embed=embed)
+                        return
 
         # ignore if the channel in which this command is called is not in either ongoing_seminars or pending_seminars
         if ctx.channel.category.name not in (
@@ -76,6 +107,25 @@ class End(commands.Cog):
                 color=discord.Colour.yellow(),
             )
             await ctx.respond(embed=embed)
+
+        # mark this seminar as finished in the database
+        async with async_session() as session:
+            async with session.begin():
+                try:
+                    this_seminar: Seminar = (
+                        await session.execute(
+                            select(Seminar).where(Seminar.channel_id == ctx.channel.id)
+                        )
+                    ).scalar_one()
+                    this_seminar.seminar_state = SeminarState.FINISHED
+                    this_seminar.finished_at = datetime.datetime.now()
+                except NoResultFound:
+                    embed = discord.Embed(
+                        title="<:warning:960146803846684692> データベース編集失敗",
+                        description="このゼミはデータベースに存在しません。",
+                        color=discord.Colour.yellow(),
+                    )
+                    await ctx.respond(embed=embed)
 
         # delete the message in role_settings channel
         role_channel = await ut.get_text_channel_by_channel_name(

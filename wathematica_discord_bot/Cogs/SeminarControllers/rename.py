@@ -1,9 +1,13 @@
 import config
 import discord
 import utility_methods as ut
+from database import async_session
 from discord import Option
 from discord.commands import slash_command
 from discord.ext import commands
+from model import Seminar
+from sqlalchemy import select
+from sqlalchemy.exc import NoResultFound
 
 
 class Rename(commands.Cog):
@@ -68,13 +72,30 @@ class Rename(commands.Cog):
             await ctx.respond(embed=embed)
             return
 
-        await role.edit(name=new_name, reason=f"Requested by {ctx.author.name}")
+        await role.edit(name=new_name.lower(), reason=f"Requested by {ctx.author.name}")
         embed = discord.Embed(
             title="<:white_check_mark:960095096563466250> ロール名変更成功",
             description=f"ロール名を `{new_name}` に更新しました。",
             color=discord.Colour.brand_green(),
         )
         await ctx.respond(embed=embed)
+
+        async with async_session() as session:
+            async with session.begin():
+                try:
+                    this_seminar: Seminar = (
+                        await session.execute(
+                            select(Seminar).where(Seminar.channel_id == ctx.channel.id)
+                        )
+                    ).scalar_one()
+                    this_seminar.name = new_name.lower()
+                except NoResultFound:
+                    embed = discord.Embed(
+                        title="<:warning:960146803846684692> データベース編集失敗",
+                        description="このゼミはデータベースに存在しません。",
+                        color=discord.Colour.yellow(),
+                    )
+                    await ctx.respond(embed=embed)
 
         # edit the message that is already sent to role_settings channel
         role_channel = await ut.get_text_channel_by_channel_name(

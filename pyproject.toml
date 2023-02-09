@@ -9,6 +9,8 @@ packages = [{include = "wathematica_discord_bot"}]
 [tool.poetry.dependencies]
 python = "^3.10"
 py-cord = "^2.3.2"
+sqlalchemy = "^2.0.2"
+aiosqlite = "^0.18.0"
 
 
 [tool.poetry.group.dev.dependencies]

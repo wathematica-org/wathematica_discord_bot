@@ -53,7 +53,7 @@ class Delete(commands.Cog):
                 except NoResultFound:
                     embed = discord.Embed(
                         title="<:x:960095353577807883> データベース検索失敗",
-                        description=f"`{seminar_name}` はデータベースに存在しません。管理者に連絡し手動で対応してもらってください。",
+                        description=f"`{seminar_name}` はデータベースに存在しません。管理者に対応を依頼してください。",
                         color=discord.Colour.red(),
                     )
                     await ctx.respond(embed=embed)
@@ -68,7 +68,9 @@ class Delete(commands.Cog):
                 description="現在のゼミ長のみがゼミを終了できます。",
                 color=discord.Colour.red(),
             )
-            await ctx.respond(embed=embed)
+            await ctx.respond(
+                embed=embed, delete_after=config.display_time_of_trivial_error
+            )
             return
 
         # ignore if this command is called in the exact channel that is to be deleted
@@ -78,7 +80,9 @@ class Delete(commands.Cog):
                 description="削除対象のチャンネル内からはコマンドを実行できません。",
                 color=discord.Colour.red(),
             )
-            await ctx.respond(embed=embed)
+            await ctx.respond(
+                embed=embed, delete_after=config.display_time_of_trivial_error
+            )
             return
 
         # keep in mind that ctx.channel and seminar_name are not the same

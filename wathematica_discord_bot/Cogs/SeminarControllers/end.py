@@ -34,7 +34,9 @@ class End(commands.Cog):
                 description="このコマンドはスレッド内では実行できません。",
                 color=discord.Colour.red(),
             )
-            await ctx.respond(embed=embed)
+            await ctx.respond(
+                embed=embed, delete_after=config.display_time_of_trivial_error
+            )
             return
 
         if ctx.channel.category is None or ctx.channel.category.id not in (
@@ -46,7 +48,9 @@ class End(commands.Cog):
                 description=f'{config.category_info["ongoing_seminars"]["name"]}または{config.category_info["pending_seminars"]["name"]}にあるテキストチャンネルでのみ実行可能です。',
                 color=discord.Colour.red(),
             )
-            await ctx.respond(embed=embed)
+            await ctx.respond(
+                embed=embed, delete_after=config.display_time_of_trivial_error
+            )
             return
 
         # this command must be executed by the leader of the seminar
@@ -66,7 +70,7 @@ class End(commands.Cog):
                 except NoResultFound:
                     embed = discord.Embed(
                         title="<:x:960095353577807883> データベース検索失敗",
-                        description="このゼミはデータベースに存在しません。管理者に連絡し手動で対応してもらってください。",
+                        description="このゼミはデータベースに存在しません。管理者に対応を依頼してください。",
                         color=discord.Colour.red(),
                     )
                     await ctx.respond(embed=embed)

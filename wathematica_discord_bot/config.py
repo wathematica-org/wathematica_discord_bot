@@ -34,6 +34,8 @@ channel_info: dict[str, ChannelInfo] = {
         "name": "権限設定",
     },
 }
+# display error message for 30 seconds if the error is trivial
+display_time_of_trivial_error: int = 30
 
 # Discord server-specific settings
 guilds: list[int] = [818049388986236938]

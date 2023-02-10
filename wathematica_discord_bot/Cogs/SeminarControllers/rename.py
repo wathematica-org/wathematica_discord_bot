@@ -36,7 +36,9 @@ class Rename(commands.Cog):
                 description="このコマンドはスレッド内では実行できません。",
                 color=discord.Colour.red(),
             )
-            await ctx.respond(embed=embed)
+            await ctx.respond(
+                embed=embed, delete_after=config.display_time_of_trivial_error
+            )
             return
 
         if ctx.channel.category is None or ctx.channel.category.id not in (
@@ -48,7 +50,9 @@ class Rename(commands.Cog):
                 description=f'{config.category_info["ongoing_seminars"]["name"]}または{config.category_info["pending_seminars"]["name"]}にあるテキストチャンネルでのみ実行可能です。',
                 color=discord.Colour.red(),
             )
-            await ctx.respond(embed=embed)
+            await ctx.respond(
+                embed=embed, delete_after=config.display_time_of_trivial_error
+            )
             return
 
         new_name = new_name.lower()  # discord channel names should be lowercase

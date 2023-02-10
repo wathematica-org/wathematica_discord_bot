@@ -47,7 +47,9 @@ class ChangeLeader(commands.Cog):
                 description=f'{config.category_info["ongoing_seminars"]["name"]}または{config.category_info["pending_seminars"]["name"]}にあるテキストチャンネルでのみ実行可能です。',
                 color=discord.Colour.red(),
             )
-            await ctx.respond(embed=embed)
+            await ctx.respond(
+                embed=embed, delete_after=config.display_time_of_trivial_error
+            )
             return
 
         if "#" not in new_leader_name:

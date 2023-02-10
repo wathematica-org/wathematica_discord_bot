@@ -1,9 +1,12 @@
 import config
 import discord
-import utility_methods as ut
-from discord import Option
+from database import async_session
+from discord import NotFound, Option
 from discord.commands import slash_command
 from discord.ext import commands
+from model import Seminar, SeminarState
+from sqlalchemy import select
+from sqlalchemy.exc import NoResultFound
 
 
 class Rename(commands.Cog):
@@ -21,92 +24,152 @@ class Rename(commands.Cog):
         ctx: discord.ApplicationContext,
         new_name: Option(input_type=str, description="新しいゼミ名", required=True),  # type: ignore
     ):
+        # [ give additional information to type checker
+        assert isinstance(new_name, str)
+        # guild_only() decorator ensures that ctx.guild is not None
+        assert isinstance(ctx.guild, discord.Guild)
+        # ]
 
-        # ignore if the channel in which this command is called is not in either ongoing_seminars or pending_seminars
-        if ctx.channel.category.name not in (
-            config.category_names["ongoing_seminars"],
-            config.category_names["pending_seminars"],
+        if not isinstance(ctx.channel, discord.TextChannel):
+            embed = discord.Embed(
+                title="<:x:960095353577807883> 不正な操作です",
+                description="このコマンドはスレッド内では実行できません。",
+                color=discord.Colour.red(),
+            )
+            await ctx.respond(
+                embed=embed, delete_after=config.display_time_of_trivial_error
+            )
+            return
+
+        if ctx.channel.category is None or ctx.channel.category.id not in (
+            config.category_info["pending_seminars"]["id"],
+            config.category_info["ongoing_seminars"]["id"],
         ):
             embed = discord.Embed(
                 title="<:x:960095353577807883> 不正な操作です",
-                description=f'{config.category_names["ongoing_seminars"]}または{config.category_names["pending_seminars"]}にあるテキストチャンネルでのみ実行可能です。',
+                description=f'{config.category_info["ongoing_seminars"]["name"]}または{config.category_info["pending_seminars"]["name"]}にあるテキストチャンネルでのみ実行可能です。',
                 color=discord.Colour.red(),
             )
-            await ctx.respond(embed=embed)
+            await ctx.respond(
+                embed=embed, delete_after=config.display_time_of_trivial_error
+            )
             return
+
+        new_name = new_name.lower()  # discord channel names should be lowercase
 
         # ensure that there's no existing seminar whose name is new_name
-        if ut.get_text_channel_by_channel_name(scope=ctx.guild, channel_name=new_name):
-            embed = discord.Embed(
-                title="<:x:960095353577807883> ゼミ名変更失敗",
-                description=f"`{new_name}` という名前のゼミは既に存在します。",
-                color=discord.Colour.red(),
-            )
-            await ctx.respond(embed=embed)
-            return
+        async with async_session() as session:
+            async with session.begin():
+                try:
+                    (
+                        await session.execute(
+                            select(Seminar).where(
+                                Seminar.name == new_name,
+                                Seminar.seminar_state != SeminarState.FINISHED,
+                            )
+                        )
+                    ).scalar_one()
+                except NoResultFound:
+                    pass  # there's no problem because no duplicate was found
+                else:
+                    embed = discord.Embed(
+                        title="<:x:960095353577807883> ゼミ名変更失敗",
+                        description=f"`{new_name}` という名前のゼミは既に存在します。",
+                        color=discord.Colour.red(),
+                    )
+                    await ctx.respond(embed=embed)
+                    return
 
-        current_name = ctx.channel.name
-        # change the name of text channel
-        await ctx.channel.edit(
-            name=new_name.lower(), reason=f"Requested by {ctx.author.name}"
-        )
-        embed = discord.Embed(
-            title="<:white_check_mark:960095096563466250> チャンネル名変更成功",
-            description=f"チャンネル名を `{new_name}` に更新しました。",
-            color=discord.Colour.brand_green(),
-        )
-        await ctx.respond(embed=embed)
+        async with async_session() as session:
+            async with session.begin():
+                try:
+                    this_seminar: Seminar = (
+                        await session.execute(
+                            select(Seminar).where(Seminar.channel_id == ctx.channel.id)
+                        )
+                    ).scalar_one()
+                    role_id = this_seminar.role_id
+                    role_setting_message_id = this_seminar.role_setting_message_id
+                    current_name = this_seminar.name
+                except NoResultFound:
+                    embed = discord.Embed(
+                        title="<:x:960095353577807883> ゼミ名変更失敗",
+                        description="このゼミはデータベースに存在しません。",
+                        color=discord.Colour.yellow(),
+                    )
+                    await ctx.respond(embed=embed)
+                    return
+                else:
+                    # change the name of text channel
+                    await ctx.channel.edit(
+                        name=new_name.lower(), reason=f"Requested by {ctx.author.name}"
+                    )
+                    embed = discord.Embed(
+                        title="<:white_check_mark:960095096563466250> チャンネル名変更成功",
+                        description=f"チャンネル名を `{new_name}` に更新しました。",
+                        color=discord.Colour.brand_green(),
+                    )
+                    await ctx.respond(embed=embed)
 
-        # change the name of role
-        role = await ut.get_role_by_role_name(guild=ctx.guild, role_name=current_name)
-        if not role:
-            embed = discord.Embed(
-                title="<:x:960095353577807883> ロール名変更失敗",
-                description=f"`{current_name}` という名前のロールは存在しません。",
-                color=discord.Colour.red(),
-            )
-            await ctx.respond(embed=embed)
-            return
+                    # change the name of role
+                    role = ctx.guild.get_role(role_id)
+                    if role:
+                        await role.edit(
+                            name=new_name.lower(),
+                            reason=f"Requested by {ctx.author.name}",
+                        )
+                        embed = discord.Embed(
+                            title="<:white_check_mark:960095096563466250> ロール名変更成功",
+                            description=f"ロール名を `{new_name}` に更新しました。",
+                            color=discord.Colour.brand_green(),
+                        )
+                        await ctx.respond(embed=embed)
+                    else:
+                        embed = discord.Embed(
+                            title="<:x:960095353577807883> ロール名変更失敗",
+                            description=f"`{current_name}` という名前のロールは存在しません。",
+                            color=discord.Colour.red(),
+                        )
+                        await ctx.respond(embed=embed)
+                        return
 
-        await role.edit(name=new_name, reason=f"Requested by {ctx.author.name}")
-        embed = discord.Embed(
-            title="<:white_check_mark:960095096563466250> ロール名変更成功",
-            description=f"ロール名を `{new_name}` に更新しました。",
-            color=discord.Colour.brand_green(),
-        )
-        await ctx.respond(embed=embed)
+                    # update the name of seminar in the database
+                    this_seminar.name = new_name
 
         # edit the message that is already sent to role_settings channel
-        role_channel = await ut.get_text_channel_by_channel_name(
-            scope=ctx.guild, channel_name=config.channel_names["role_settings"]
-        )
-        async for message in role_channel.history(limit=300):
-            if message.author.name != config.bot_name:
-                continue
+        role_channel = ctx.guild.get_channel(config.channel_info["role_settings"]["id"])
+        if not isinstance(role_channel, discord.TextChannel):
+            embed = discord.Embed(
+                title="<:x:960095353577807883> システムエラー",
+                description="管理者向けメッセージ: `role_settings` チャンネルが見つかりませんでした。",
+                color=discord.Colour.red(),
+            )
+            await ctx.respond(embed=embed)
+            return
 
-            embed_objects_in_the_message: list[discord.Embed] = message.embeds
-            if not embed_objects_in_the_message:
-                # messages from old bot does not have embed object.
-                continue
-
-            # each message in role_settings channel has only one embed object
-            embed_object_in_the_message = embed_objects_in_the_message[0]
-            seminar_name_in_the_message = embed_object_in_the_message.title
-
-            if seminar_name_in_the_message == current_name:
-                new_embed = discord.Embed(
-                    title=new_name,
-                    description=f"{new_name} に参加する方はこのメッセージにリアクションをつけてください。",
-                )
-                await message.edit(embed=new_embed)
-                break
-
-        embed = discord.Embed(
-            title="<:white_check_mark:960095096563466250> ロール付与メッセージ変更成功",
-            description=f"{role_channel.mention} のロール付与メッセージを更新しました。",
-            color=discord.Colour.brand_green(),
-        )
-        await ctx.respond(embed=embed)
+        try:
+            role_setting_message = await role_channel.fetch_message(
+                role_setting_message_id
+            )
+        except NotFound:
+            embed = discord.Embed(
+                title="<:warning:960146803846684692> ロール付与メッセージ編集失敗",
+                description=f"{current_name} のロール付与メッセージが見つかりませんでした。",
+                color=discord.Colour.yellow(),
+            )
+            await ctx.respond(embed=embed)
+        else:
+            new_embed = discord.Embed(
+                title=new_name,
+                description=f"{new_name} に参加する方はこのメッセージにリアクションをつけてください。",
+            )
+            await role_setting_message.edit(embed=new_embed)
+            embed = discord.Embed(
+                title="<:white_check_mark:960095096563466250> ロール付与メッセージ編集成功",
+                description=f"{role_channel.mention} のロール付与メッセージを編集しました。",
+                color=discord.Colour.brand_green(),
+            )
+            await ctx.respond(embed=embed)
 
 
 def setup(bot: discord.Bot):

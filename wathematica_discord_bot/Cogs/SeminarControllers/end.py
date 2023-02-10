@@ -1,8 +1,13 @@
+import datetime
+
 import config
 import discord
-import utility_methods as ut
+from database import async_session
 from discord.commands import slash_command
 from discord.ext import commands
+from model import Seminar, SeminarState
+from sqlalchemy import select
+from sqlalchemy.exc import NoResultFound
 
 
 class End(commands.Cog):
@@ -12,56 +17,125 @@ class End(commands.Cog):
     @commands.guild_only()
     @slash_command(
         name="end",
-        description=f'[要編集権限] 終了したゼミを{config.category_names["finished_seminars"]}へ移動させます',
+        description=f'終了したゼミを{config.category_info["finished_seminars"]["name"]}へ移動させます',
         guild_ids=config.guilds,
     )
     async def end(self, ctx: discord.ApplicationContext):
+        # [ give additional information to type checker
+        # guild_only() decorator ensures that ctx.guild is not None
+        assert isinstance(ctx.guild, discord.Guild)
+        # In guild, ctx.author is always a Member
+        assert isinstance(ctx.author, discord.Member)
+        # ]
 
-        # this command require the user to have manage_channel permission
-        if not ctx.author.guild_permissions.manage_channels:
+        if not isinstance(ctx.channel, discord.TextChannel):
             embed = discord.Embed(
-                title="<:x:960095353577807883> ゼミ終了処理失敗",
-                description="当該操作に必要な権限が不足しています。",
+                title="<:x:960095353577807883> 不正な操作です",
+                description="このコマンドはスレッド内では実行できません。",
                 color=discord.Colour.red(),
             )
-            await ctx.respond(embed=embed)
+            await ctx.respond(
+                embed=embed, delete_after=config.display_time_of_trivial_error
+            )
             return
 
-        # ignore if the channel in which this command is called is not in either ongoing_seminars or pending_seminars
-        if ctx.channel.category.name not in (
-            config.category_names["ongoing_seminars"],
-            config.category_names["pending_seminars"],
+        if ctx.channel.category is None or ctx.channel.category.id not in (
+            config.category_info["pending_seminars"]["id"],
+            config.category_info["ongoing_seminars"]["id"],
         ):
             embed = discord.Embed(
                 title="<:x:960095353577807883> 不正な操作です",
-                description=f'{config.category_names["ongoing_seminars"]}または{config.category_names["pending_seminars"]}にあるテキストチャンネルでのみ実行可能です。',
+                description=f'{config.category_info["ongoing_seminars"]["name"]}または{config.category_info["pending_seminars"]["name"]}にあるテキストチャンネルでのみ実行可能です。',
+                color=discord.Colour.red(),
+            )
+            await ctx.respond(
+                embed=embed, delete_after=config.display_time_of_trivial_error
+            )
+            return
+
+        # this command must be executed by the leader of the seminar
+        # or by someone who has the manage_channels permission
+        async with async_session() as session:
+            async with session.begin():
+                try:
+                    this_seminar: Seminar = (
+                        await session.execute(
+                            select(Seminar).where(Seminar.channel_id == ctx.channel.id)
+                        )
+                    ).scalar_one()
+                    seminar_name = this_seminar.name
+                    current_leader_id = this_seminar.leader_id
+                    role_id = this_seminar.role_id
+                    role_setting_message_id = this_seminar.role_setting_message_id
+                except NoResultFound:
+                    embed = discord.Embed(
+                        title="<:x:960095353577807883> データベース検索失敗",
+                        description="このゼミはデータベースに存在しません。管理者に対応を依頼してください。",
+                        color=discord.Colour.red(),
+                    )
+                    await ctx.respond(embed=embed)
+                    return
+                else:
+                    # Check if there's a text channel with the same name in the finished_seminars category.
+                    # Tips: Discord does not allow two channels with the same name in the same category.
+                    try:
+                        (
+                            await session.execute(
+                                select(Seminar).where(
+                                    Seminar.name == seminar_name,
+                                    Seminar.seminar_state == SeminarState.FINISHED,
+                                )
+                            )
+                        ).scalar_one()
+                    except NoResultFound:
+                        pass
+                    else:
+                        embed = discord.Embed(
+                            title="<:x:960095353577807883> チャンネル名の重複を検出しました",
+                            description=f'すでに同名のゼミが{config.category_info["finished_seminars"]["name"]}に存在します。ゼミ名を `/rename` してから終了してください。',
+                            color=discord.Colour.red(),
+                        )
+                        await ctx.respond(embed=embed)
+                        return
+
+        if not (
+            current_leader_id == ctx.author.id
+            or ctx.author.guild_permissions.manage_channels
+        ):
+            embed = discord.Embed(
+                title="<:x:960095353577807883> ゼミ終了処理失敗",
+                description="現在のゼミ長のみがゼミを終了できます。",
                 color=discord.Colour.red(),
             )
             await ctx.respond(embed=embed)
             return
 
-        seminar_name = ctx.channel.name
-
         # move the text channel to the finished_seminars category
-        finished_seminar_category = await ut.get_category_by_category_name(
-            guild=ctx.guild,
-            category_name=config.category_names["finished_seminars"],
+        finished_seminar_category = ctx.guild.get_channel(
+            config.category_info["finished_seminars"]["id"]
         )
+        if not isinstance(finished_seminar_category, discord.CategoryChannel):
+            embed = discord.Embed(
+                title="<:x:960095353577807883> システムエラー",
+                description="管理者向けメッセージ: `finished_seminars` カテゴリが見つかりませんでした。",
+                color=discord.Colour.red(),
+            )
+            await ctx.respond(embed=embed)
+            return
+
         await ctx.channel.edit(
             category=finished_seminar_category, reason=f"Requested by {ctx.author.name}"
         )
         embed = discord.Embed(
             title="<:white_check_mark:960095096563466250> チャンネル移動成功",
-            description=f'チャンネルを{config.category_names["finished_seminars"]}へ移動しました。',
+            description=f'チャンネルを{config.category_info["finished_seminars"]["name"]}へ移動しました。',
             color=discord.Colour.brand_green(),
         )
         await ctx.respond(embed=embed)
 
         # delete the role of this seminar
-        seminar_role = await ut.get_role_by_role_name(
-            guild=ctx.guild, role_name=seminar_name
-        )
-        if seminar_role is not None:
+        seminar_role = ctx.guild.get_role(role_id)
+        if seminar_role:
             await seminar_role.delete(reason=f"Requested by {ctx.author.name}")
             embed = discord.Embed(
                 title="<:white_check_mark:960095096563466250> ロール削除成功",
@@ -77,33 +151,49 @@ class End(commands.Cog):
             )
             await ctx.respond(embed=embed)
 
+        # mark this seminar as finished in the database
+        async with async_session() as session:
+            async with session.begin():
+                # here, it is ensured that the seminar exists in the database
+                this_seminar: Seminar = (
+                    await session.execute(
+                        select(Seminar).where(Seminar.channel_id == ctx.channel.id)
+                    )
+                ).scalar_one()
+                this_seminar.seminar_state = SeminarState.FINISHED
+                this_seminar.finished_at = datetime.datetime.now()
+
         # delete the message in role_settings channel
-        role_channel = await ut.get_text_channel_by_channel_name(
-            scope=ctx.guild, channel_name=config.channel_names["role_settings"]
+        role_setting_channel = ctx.guild.get_channel(
+            config.channel_info["role_settings"]["id"]
         )
-        async for message in role_channel.history(limit=300):
-            if message.author.name != config.bot_name:
-                continue
+        if not isinstance(role_setting_channel, discord.TextChannel):
+            embed = discord.Embed(
+                title="<:x:960095353577807883> システムエラー",
+                description="管理者向けメッセージ: `role_settings` チャンネルが見つかりませんでした。",
+                color=discord.Colour.red(),
+            )
+            await ctx.respond(embed=embed)
+            return
 
-            embed_objects_in_the_message: list[discord.Embed] = message.embeds
-            if not embed_objects_in_the_message:
-                # messages from old bot does not have embed object.
-                continue
-
-            # each message in role_settings channel has only one embed object
-            embed_object_in_the_message = embed_objects_in_the_message[0]
-            seminar_name_in_the_message = embed_object_in_the_message.title
-
-            if seminar_name_in_the_message == seminar_name:
-                await message.delete()
-                break
-
-        embed = discord.Embed(
-            title="<:white_check_mark:960095096563466250> ロール付与メッセージ削除成功",
-            description=f"{role_channel.mention} のロール付与メッセージを削除しました。",
-            color=discord.Colour.brand_green(),
+        role_setting_message = await role_setting_channel.fetch_message(
+            role_setting_message_id
         )
-        await ctx.respond(embed=embed)
+        if role_setting_message:
+            await role_setting_message.delete()
+            embed = discord.Embed(
+                title="<:white_check_mark:960095096563466250> ロール付与メッセージ削除成功",
+                description=f"{role_setting_channel.mention} のロール付与メッセージを削除しました。",
+                color=discord.Colour.brand_green(),
+            )
+            await ctx.respond(embed=embed)
+        else:
+            embed = discord.Embed(
+                title="<:warning:960146803846684692> ロール付与メッセージ削除失敗",
+                description=f"{role_setting_channel.mention} にロール付与メッセージが存在しません。",
+                color=discord.Colour.yellow(),
+            )
+            await ctx.respond(embed=embed)
 
 
 def setup(bot: discord.Bot):

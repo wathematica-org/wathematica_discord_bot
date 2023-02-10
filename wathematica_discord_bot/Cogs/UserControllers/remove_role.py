@@ -1,7 +1,10 @@
 import config
 import discord
-import utility_methods as ut
+from database import async_session
 from discord.ext import commands
+from model import Seminar
+from sqlalchemy import select
+from sqlalchemy.exc import NoResultFound
 
 
 class RoleRemover(commands.Cog):
@@ -17,45 +20,61 @@ class RoleRemover(commands.Cog):
         if not payload.guild_id:
             return
         guild = self.bot.get_guild(payload.guild_id)
+        if not guild:
+            return
         member = await guild.fetch_member(payload.user_id)
-
-        channel = self.bot.get_channel(payload.channel_id)
-        message = await channel.fetch_message(payload.message_id)
         # ignore reactions from bot
         if member.bot:
             return
-
         # ignore reactions that happens in channels other than role_setting channel
-        # or belongs to other user's message
-        # TODO: Implement error handling to prevent this event from being triggered in DM
-        if (
-            channel.name != config.channel_names["role_settings"]
-            or message.author.name != config.bot_name
-        ):
+        if payload.channel_id != config.channel_info["role_settings"]["id"]:
             return
         # react only to "interesting" emoji
         if payload.emoji.id != 836259755302453299:
             return
-
-        embed_objects_in_the_message: list[discord.Embed] = message.embeds
-        if not embed_objects_in_the_message:
-            # messages from old bot does not have embed object.
+        channel = self.bot.get_channel(payload.channel_id)
+        if not isinstance(channel, discord.TextChannel):
+            return
+        message = await channel.fetch_message(payload.message_id)
+        if message.author.name != config.bot_name:
+            return
+        if not message.guild:
             return
 
-        # each message in role_settings channel has only one embed object
-        embed_object_in_the_message = embed_objects_in_the_message[0]
-        seminar_name = embed_object_in_the_message.title
+        # check if the user who executed this command has permission to change the leader
+        async with async_session() as session:
+            async with session.begin():
+                try:
+                    this_seminar: Seminar = (
+                        await session.execute(
+                            select(Seminar).where(
+                                Seminar.role_setting_message_id == payload.message_id
+                            )
+                        )
+                    ).scalar_one()
+                    seminar_name = this_seminar.name
+                    role_id = this_seminar.role_id
+                except NoResultFound:
+                    embed = discord.Embed(
+                        title="<:x:960095353577807883> データベース検索失敗",
+                        description="このゼミはデータベースに存在しません。",
+                        color=discord.Colour.red(),
+                    )
+                    await channel.send(
+                        content=member.mention, embed=embed, delete_after=30
+                    )
+                    return
 
-        seminar_role = await ut.get_role_by_role_name(
-            guild=message.guild, role_name=seminar_name
-        )
+        seminar_role = message.guild.get_role(role_id)
         if not seminar_role:
             embed = discord.Embed(
-                title="<:warning:960146803846684692> ロール削除失敗",
-                description=f"ロール `{seminar_name}` が存在しないか，{member.name}にロール `{seminar_name}` が付けられていません",
-                color=discord.Colour.yellow(),
+                title="<:x:960095353577807883> ロール付与失敗",
+                description=f"ロール `{seminar_name}` が存在しません。",
+                color=discord.Colour.red(),
             )
-            await message.channel.send(embed=embed)
+            await message.channel.send(
+                content=member.mention, embed=embed, delete_after=30
+            )
         else:
             await member.remove_roles(seminar_role)
 

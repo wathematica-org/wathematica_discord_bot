@@ -29,5 +29,6 @@ class Seminar(Base):
     leader_id: Mapped[int]
     channel_id: Mapped[int] = mapped_column(unique=True)
     role_id: Mapped[int] = mapped_column(unique=True)
+    role_setting_message_id: Mapped[int] = mapped_column(unique=True)
     # Enum type can be directly mapped to SQLAlchemy Column type.
     # See https://docs.sqlalchemy.org/en/20/orm/declarative_tables.html#using-python-enum-or-pep-586-literal-types-in-the-type-map for more details

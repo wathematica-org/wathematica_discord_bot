@@ -95,20 +95,6 @@ class New(commands.Cog):
         new_text_channel = await category.create_text_channel(name=seminar_name)
         new_role = await ctx.guild.create_role(name=seminar_name, mentionable=True)
 
-        # add this seminar to the database
-        seminar = Seminar(
-            name=seminar_name,
-            created_at=datetime.datetime.now(),
-            finished_at=None,
-            seminar_state=SeminarState.PENDING,
-            leader_id=ctx.author.id,
-            channel_id=new_text_channel.id,
-            role_id=new_role.id,
-        )
-        async with async_session() as session:
-            async with session.begin():
-                session.add(seminar)
-
         embed = discord.Embed(
             title="<:white_check_mark:960095096563466250> チャンネル作成成功",
             description=f"チャンネル `{seminar_name}` を作成しました。",
@@ -153,6 +139,21 @@ class New(commands.Cog):
             color=discord.Colour.brand_green(),
         )
         await new_text_channel.send(embed=embed)
+
+        # add this seminar to the database
+        seminar = Seminar(
+            name=seminar_name,
+            created_at=datetime.datetime.now(),
+            finished_at=None,
+            seminar_state=SeminarState.PENDING,
+            leader_id=ctx.author.id,
+            channel_id=new_text_channel.id,
+            role_id=new_role.id,
+            role_setting_message_id=message_to_role_settings_channel.id,
+        )
+        async with async_session() as session:
+            async with session.begin():
+                session.add(seminar)
 
 
 def setup(bot: discord.Bot):

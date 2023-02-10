@@ -112,12 +112,12 @@ class End(commands.Cog):
 
         # move the text channel to the finished_seminars category
         finished_seminar_category = ctx.guild.get_channel(
-            config.category_info["finished_seminar"]["id"]
+            config.category_info["finished_seminars"]["id"]
         )
         if not isinstance(finished_seminar_category, discord.CategoryChannel):
             embed = discord.Embed(
                 title="<:x:960095353577807883> システムエラー",
-                description="管理者向けメッセージ: `finished_seminar` カテゴリが見つかりませんでした。",
+                description="管理者向けメッセージ: `finished_seminars` カテゴリが見つかりませんでした。",
                 color=discord.Colour.red(),
             )
             await ctx.respond(embed=embed)

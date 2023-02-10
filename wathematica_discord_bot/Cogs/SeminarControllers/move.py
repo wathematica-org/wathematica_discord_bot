@@ -46,12 +46,12 @@ class Move(commands.Cog):
             return
 
         ongoing_seminar_category = ctx.guild.get_channel(
-            config.category_info["ongoing_seminar"]["id"]
+            config.category_info["ongoing_seminars"]["id"]
         )
         if not isinstance(ongoing_seminar_category, discord.CategoryChannel):
             embed = discord.Embed(
                 title="<:x:960095353577807883> システムエラー",
-                description="管理者向けメッセージ: `ongoing_seminar` カテゴリが見つかりませんでした。",
+                description="管理者向けメッセージ: `ongoing_seminars` カテゴリが見つかりませんでした。",
                 color=discord.Colour.red(),
             )
             await ctx.respond(embed=embed)

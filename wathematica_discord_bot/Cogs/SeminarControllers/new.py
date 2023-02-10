@@ -115,11 +115,11 @@ class New(commands.Cog):
                             await ctx.respond(embed=embed)
                             return
 
-        category = ctx.guild.get_channel(config.category_info["pending_seminar"]["id"])
+        category = ctx.guild.get_channel(config.category_info["pending_seminars"]["id"])
         if not isinstance(category, discord.CategoryChannel):
             embed = discord.Embed(
                 title="<:x:960095353577807883> システムエラー",
-                description="管理者向けメッセージ: `pending_seminar` カテゴリが見つかりませんでした。",
+                description="管理者向けメッセージ: `pending_seminars` カテゴリが見つかりませんでした。",
                 color=discord.Colour.red(),
             )
             await ctx.respond(embed=embed)

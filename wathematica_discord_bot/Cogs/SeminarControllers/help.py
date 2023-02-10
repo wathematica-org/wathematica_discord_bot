@@ -120,7 +120,7 @@ class Help(commands.Cog):
     async def help(
         self,
         ctx: discord.ApplicationContext,
-        command_name: Option(input_type=str, description="解説を見たいコマンド名", required=False),  # type: ignore
+        command_name: Option(input_type=str, description="[省略可]解説を見たいコマンド名", required=False),  # type: ignore
     ):
         # [ give additional information to type checker
         # guild_only() decorator ensures that ctx.guild is not None

@@ -4,6 +4,7 @@
 ### My Settings ###
 .credential
 database.db
+*.bak
 
 ### Python ###
 # Byte-compiled / optimized / DLL files

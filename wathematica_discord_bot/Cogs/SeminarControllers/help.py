@@ -17,6 +17,18 @@ class Help(commands.Cog):
             color=0x12A0F0,  # blue
             description="ゼミ管理用のコマンドの使い方を説明します。",
         )
+        if command_name in ["all", "help"]:
+            embed.add_field(
+                name="/help [コマンド名]",
+                value=textwrap.dedent(
+                    """
+                    `[コマンド名]` という名前のコマンドの使い方を表示します。
+                    `[コマンド名]` を省略した場合は、全てのコマンドの使い方を表示します。
+                    **`/help` コマンドの出力は、コマンドを実行した本人にのみ表示されます。**
+                    """
+                ),
+                inline=False,
+            )
         if command_name in ["all", "new"]:
             embed.add_field(
                 name="/new <新規ゼミ名>",
@@ -120,7 +132,7 @@ class Help(commands.Cog):
     async def help(
         self,
         ctx: discord.ApplicationContext,
-        command_name: Option(input_type=str, description="解説を見たいコマンド名", required=False),  # type: ignore
+        command_name: Option(input_type=str, description="[省略可]解説を見たいコマンド名", required=False),  # type: ignore
     ):
         # [ give additional information to type checker
         # guild_only() decorator ensures that ctx.guild is not None

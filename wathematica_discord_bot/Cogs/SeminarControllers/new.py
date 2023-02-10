@@ -176,7 +176,7 @@ class New(commands.Cog):
 
         embed = discord.Embed(
             title="<:white_check_mark:960095096563466250> ゼミ作成成功",
-            description=f"`{ctx.author.mention}` をゼミ長として登録しました。",
+            description=f"{ctx.author.mention} をゼミ長として登録しました。",
             color=discord.Colour.brand_green(),
         )
         await new_text_channel.send(embed=embed)

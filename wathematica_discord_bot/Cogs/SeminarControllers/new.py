@@ -18,7 +18,7 @@ class New(commands.Cog):
     @commands.guild_only()
     @slash_command(
         name="new",
-        description="seminar_nameが付与されたテキストチャンネルとロールを作成します。",
+        description="seminar_name が付与されたテキストチャンネルとロールを作成します。",
         guild_ids=config.guilds,
     )
     async def new(

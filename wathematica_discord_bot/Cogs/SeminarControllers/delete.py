@@ -16,7 +16,7 @@ class Delete(commands.Cog):
     @commands.guild_only()
     @slash_command(
         name="delete",
-        description="名前が `seminar_name` のゼミを削除します。",
+        description="名前が seminar_name のゼミを削除します。",
         guild_ids=config.guilds,
     )
     async def delete(

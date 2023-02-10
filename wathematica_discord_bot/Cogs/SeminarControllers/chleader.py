@@ -26,15 +26,25 @@ class ChangeLeader(commands.Cog):
         ctx: discord.ApplicationContext,
         new_leader_name: Option(input_type=str, description="新ゼミ長のユーザ指定名", required=True),  # type: ignore
     ):
+        # [ give additional information to type checker
+        assert isinstance(new_leader_name, str)
+        # guild_only() decorator ensures that ctx.guild is not None
+        assert isinstance(ctx.guild, discord.Guild)
+        # In guild, ctx.channel is always a TextChannel or Thread
+        assert isinstance(ctx.channel, discord.TextChannel) or isinstance(
+            ctx.channel, discord.Thread
+        )
+        # In guild, ctx.author is always a Member
+        assert isinstance(ctx.author, discord.Member)
+        # ]
 
-        # ignore if the channel in which this command is called is not in either ongoing_seminars or pending_seminars
-        if ctx.channel.category.name not in (
-            config.category_names["ongoing_seminars"],
-            config.category_names["pending_seminars"],
+        if ctx.channel.category is None or ctx.channel.category.id not in (
+            config.category_info["pending_seminars"]["id"],
+            config.category_info["ongoing_seminars"]["id"],
         ):
             embed = discord.Embed(
                 title="<:x:960095353577807883> 不正な操作です",
-                description=f'{config.category_names["ongoing_seminars"]}または{config.category_names["pending_seminars"]}にあるテキストチャンネルでのみ実行可能です。',
+                description=f'{config.category_info["ongoing_seminars"]["name"]}または{config.category_info["pending_seminars"]["name"]}にあるテキストチャンネルでのみ実行可能です。',
                 color=discord.Colour.red(),
             )
             await ctx.respond(embed=embed)
@@ -42,14 +52,15 @@ class ChangeLeader(commands.Cog):
 
         if "#" not in new_leader_name:
             embed = discord.Embed(
-                title="<:x:960095353577807883> ユーザ名の指定が間違っています",
+                title="<:x:960095353577807883> ユーザ名を正しく指定してください",
                 description=textwrap.dedent(
                     f"""
                     ユーザ指定名は `ユーザ名#4桁の数字` の形をしています。
                     例えばあなたの場合は `{ctx.author.name}#{ctx.author.discriminator}` です。
-                    ユーザ指定名を確認する方法はこちら: https://discord2.tokyo/archives/1177#outline__1
+                    ユーザ指定名を確認する方法は上のリンクを参照してください。
                     """
                 ),
+                url="https://discord2.tokyo/archives/1177#outline__1",
                 color=discord.Colour.red(),
             )
             await ctx.respond(embed=embed)

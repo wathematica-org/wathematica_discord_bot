@@ -1,6 +1,5 @@
 import config
 import discord
-import utility_methods as ut
 from database import async_session
 from discord import Option
 from discord.commands import slash_command
@@ -17,7 +16,7 @@ class Delete(commands.Cog):
     @commands.guild_only()
     @slash_command(
         name="delete",
-        description="[要編集権限] 名前が seminar_name のゼミを削除します。",
+        description="名前が `seminar_name` のゼミを削除します。",
         guild_ids=config.guilds,
     )
     async def delete(
@@ -25,6 +24,17 @@ class Delete(commands.Cog):
         ctx: discord.ApplicationContext,
         seminar_name: Option(input_type=str, description="削除対象のゼミ名", required=True),  # type: ignore
     ):
+        # [ give additional information to type checker
+        assert isinstance(seminar_name, str)
+        # guild_only() decorator ensures that ctx.guild is not None
+        assert isinstance(ctx.guild, discord.Guild)
+        # In guild, ctx.channel is always a TextChannel or a Thread
+        assert isinstance(ctx.channel, discord.TextChannel) or isinstance(
+            ctx.channel, discord.Thread
+        )
+        # In guild, ctx.author is always a Member
+        assert isinstance(ctx.author, discord.Member)
+        # ]
 
         # this command must be executed by the leader of the seminar
         # or by someone who has the manage_channels permission
@@ -38,6 +48,8 @@ class Delete(commands.Cog):
                     ).scalar_one()
                     current_leader_id = this_seminar.leader_id
                     role_setting_message_id = this_seminar.role_setting_message_id
+                    role_id = this_seminar.role_id
+                    channel_id = this_seminar.channel_id
                 except NoResultFound:
                     embed = discord.Embed(
                         title="<:x:960095353577807883> データベース検索失敗",
@@ -71,9 +83,7 @@ class Delete(commands.Cog):
 
         # keep in mind that ctx.channel and seminar_name are not the same
         # delete the text channel
-        seminar_text_channel = await ut.get_text_channel_by_channel_name(
-            scope=ctx.guild, channel_name=seminar_name
-        )
+        seminar_text_channel = ctx.guild.get_channel(channel_id)
         if seminar_text_channel:
             await seminar_text_channel.delete(reason=f"Requested by {ctx.author.name}")
             embed = discord.Embed(
@@ -91,7 +101,7 @@ class Delete(commands.Cog):
             await ctx.respond(embed=embed)
 
         # delete the role
-        role = await ut.get_role_by_role_name(guild=ctx.guild, role_name=seminar_name)
+        role = ctx.guild.get_role(role_id)
         if role:
             await role.delete(reason=f"Requested by {ctx.author.name}")
             embed = discord.Embed(
@@ -109,24 +119,33 @@ class Delete(commands.Cog):
             await ctx.respond(embed=embed)
 
         # delete the message in role_settings channel
-        role_channel = await ut.get_text_channel_by_channel_name(
-            scope=ctx.guild, channel_name=config.channel_names["role_settings"]
+        role_setting_channel = ctx.guild.get_channel(
+            config.channel_info["role_settings"]["id"]
         )
-        role_setting_message = await role_channel.fetch_message(
-            id=role_setting_message_id
+        if not isinstance(role_setting_channel, discord.TextChannel):
+            embed = discord.Embed(
+                title="<:x:960095353577807883> システムエラー",
+                description="管理者向けメッセージ: `role_settings` チャンネルが見つかりませんでした。",
+                color=discord.Colour.red(),
+            )
+            await ctx.respond(embed=embed)
+            return
+
+        role_setting_message = await role_setting_channel.fetch_message(
+            role_setting_message_id
         )
         if role_setting_message:
-            role_setting_message.delete()
+            await role_setting_message.delete()
             embed = discord.Embed(
                 title="<:white_check_mark:960095096563466250> ロール付与メッセージ削除成功",
-                description=f"{role_channel.mention} のロール付与メッセージを削除しました。",
+                description=f"{role_setting_channel.mention} のロール付与メッセージを削除しました。",
                 color=discord.Colour.brand_green(),
             )
             await ctx.respond(embed=embed)
         else:
             embed = discord.Embed(
                 title="<:warning:960146803846684692> ロール付与メッセージ削除失敗",
-                description=f"{role_channel.mention} にロール付与メッセージが存在しません。",
+                description=f"{role_setting_channel.mention} にロール付与メッセージが存在しません。",
                 color=discord.Colour.yellow(),
             )
             await ctx.respond(embed=embed)
@@ -134,14 +153,7 @@ class Delete(commands.Cog):
         # delete this seminar from the database
         async with async_session() as session:
             async with session.begin():
-                seminar_to_delete: Seminar = (
-                    await session.execute(
-                        select(Seminar).where(
-                            Seminar.channel_id == seminar_text_channel.id
-                        )
-                    )
-                ).scalar_one()
-                await session.delete(seminar_to_delete)
+                await session.delete(this_seminar)
 
 
 def setup(bot: discord.Bot):

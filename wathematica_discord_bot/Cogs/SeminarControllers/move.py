@@ -1,6 +1,5 @@
 import config
 import discord
-import utility_methods as ut
 from database import async_session
 from discord.commands import slash_command
 from discord.ext import commands
@@ -16,24 +15,49 @@ class Move(commands.Cog):
     @commands.guild_only()
     @slash_command(
         name="move",
-        description=f'ゼミを{config.category_names["pending_seminars"]}から{config.category_names["ongoing_seminars"]}に移動させます',
+        description=f'ゼミを{config.category_info["pending_seminars"]["name"]}から{config.category_info["ongoing_seminars"]["name"]}に移動させます',
         guild_ids=config.guilds,
     )
     async def move(self, ctx: discord.ApplicationContext):
+        # [ give additional information to type checker
+        # guild_only() decorator ensures that ctx.guild is not None
+        assert isinstance(ctx.guild, discord.Guild)
+        # ]
 
-        if ctx.channel.category.name != config.category_names["pending_seminars"]:
+        if not isinstance(ctx.channel, discord.TextChannel):
             embed = discord.Embed(
                 title="<:x:960095353577807883> 不正な操作です",
-                description=f'{config.category_names["pending_seminars"]}にあるテキストチャンネルでのみ実行可能です。',
+                description="このコマンドはスレッド内では実行できません。",
                 color=discord.Colour.red(),
             )
             await ctx.respond(embed=embed)
             return
 
-        ongoing_seminar_category = await ut.get_category_by_category_name(
-            guild=ctx.guild,
-            category_name=config.category_names["ongoing_seminars"],
+        if (
+            ctx.channel.category is None
+            or ctx.channel.category.id != config.category_info["pending_seminars"]["id"]
+        ):
+            embed = discord.Embed(
+                title="<:x:960095353577807883> 不正な操作です",
+                description=f'{config.category_info["pending_seminars"]["name"]}にあるテキストチャンネルでのみ実行可能です。',
+                color=discord.Colour.red(),
+            )
+            await ctx.respond(embed=embed)
+            return
+
+        ongoing_seminar_category = ctx.guild.get_channel(
+            config.category_info["ongoing_seminar"]["id"]
         )
+        if not isinstance(ongoing_seminar_category, discord.CategoryChannel):
+            embed = discord.Embed(
+                title="<:x:960095353577807883> システムエラー",
+                description="管理者向けメッセージ: `ongoing_seminar` カテゴリが見つかりませんでした。",
+                color=discord.Colour.red(),
+            )
+            await ctx.respond(embed=embed)
+            return
+
+        # move the channel to the ongoing_seminar category
         await ctx.channel.edit(
             category=ongoing_seminar_category, reason=f"Requested by {ctx.author.name}"
         )
@@ -57,7 +81,7 @@ class Move(commands.Cog):
 
         embed = discord.Embed(
             title="<:white_check_mark:960095096563466250> チャンネル移動成功",
-            description=f'チャンネルを{config.category_names["ongoing_seminars"]}へ移動しました。',
+            description=f'チャンネルを{config.category_info["ongoing_seminars"]["name"]}へ移動しました。',
             color=discord.Colour.brand_green(),
         )
         await ctx.respond(embed=embed)

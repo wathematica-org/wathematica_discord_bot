@@ -117,7 +117,7 @@ class End(commands.Cog):
         if not isinstance(finished_seminar_category, discord.CategoryChannel):
             embed = discord.Embed(
                 title="<:x:960095353577807883> システムエラー",
-                description="管理者向けメッセージ: `ongoing_seminar` カテゴリが見つかりませんでした。",
+                description="管理者向けメッセージ: `finished_seminar` カテゴリが見つかりませんでした。",
                 color=discord.Colour.red(),
             )
             await ctx.respond(embed=embed)

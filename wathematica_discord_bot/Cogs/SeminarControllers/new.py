@@ -149,7 +149,7 @@ class New(commands.Cog):
         if not isinstance(role_setting_channel, discord.TextChannel):
             embed = discord.Embed(
                 title="<:x:960095353577807883> システムエラー",
-                description="管理者向けメッセージ: `pending_seminar` カテゴリが見つかりませんでした。",
+                description="管理者向けメッセージ: `role_settings` チャンネルが見つかりませんでした。",
                 color=discord.Colour.red(),
             )
             await ctx.respond(embed=embed)

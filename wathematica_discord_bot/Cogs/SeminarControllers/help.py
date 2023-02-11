@@ -15,7 +15,7 @@ class Help(commands.Cog):
         embed = discord.Embed(
             title="コマンドの使い方",
             color=0x12A0F0,  # blue
-            description="ゼミ管理用のコマンドの使い方を説明します。",
+            description="<:bulb:1073594829528903681> 引数を取るコマンドを実行する際は, `/コマンド名` を入力して一度Enterを押すとスムーズに入力できることがあります。",
         )
         if command_name in ["all", "help"]:
             embed.add_field(

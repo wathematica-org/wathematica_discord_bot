@@ -13,9 +13,9 @@ class RoleRemover(commands.Cog):
 
     @commands.Cog.listener()
     async def on_raw_reaction_remove(self, payload: discord.RawReactionActionEvent):
-        # BE CAREFUL that the member who 'removed' the reaction can't be retrieved
+        # Note that the member who 'removed' the reaction can't be retrieved
         # in the same way as on_raw_reaction_add, in which this bot retrieves the member
-        # who 'added' the reaction. Concretely, the member object can't be retrieved
+        # who 'added' the reaction with payload.member. Here, the member object can't be retrieved
         # with payload.member, so fetch_message method is necessarily used here.
         if not payload.guild_id:
             return
@@ -41,7 +41,6 @@ class RoleRemover(commands.Cog):
         if not message.guild:
             return
 
-        # check if the user who executed this command has permission to change the leader
         async with async_session() as session:
             async with session.begin():
                 try:

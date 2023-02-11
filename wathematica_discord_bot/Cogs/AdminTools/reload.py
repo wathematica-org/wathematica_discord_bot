@@ -14,13 +14,16 @@ class Reload(commands.Cog):
         description="[技術部専用] 指定されたCogをリロードします",
         guild_ids=config.guilds,
     )
+    # 822094687548342292 is the id of '技術部' role
+    # see https://docs.pycord.dev/en/master/ext/commands/api.html#checks to know how to use 'checker' decorators like 'has_role'
+    @commands.has_role(822094687548342292)
     async def reload(
         self,
         ctx: discord.ApplicationContext,
         cog_specifier: Option(input_type=str, description="リロードしたいCog名", required=True),  # type: ignore
     ):
         # reload specified cog
-        # cog_specifier will be like "AdminTools.reload"
+        # cog_specifier will be like "Cogs.AdminTools.reload"
         self.bot.reload_extension(cog_specifier)
         embed = discord.Embed(
             title="<:arrows_counterclockwise:960172711924088882> Cogリロード成功",

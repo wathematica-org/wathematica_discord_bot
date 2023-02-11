@@ -74,6 +74,7 @@ class Delete(commands.Cog):
             return
 
         # ignore if this command is called in the exact channel that is to be deleted
+        # TODO: Not ctx.channel.name but channel_id should be used here.
         if ctx.channel.name == seminar_name:
             embed = discord.Embed(
                 title="<:x:960095353577807883> ゼミ削除処理失敗",

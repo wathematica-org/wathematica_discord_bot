@@ -35,7 +35,6 @@ class RoleAssigner(commands.Cog):
         if not message.guild:
             return
 
-        # check if the user who executed this command has permission to change the leader
         async with async_session() as session:
             async with session.begin():
                 try:

@@ -54,7 +54,9 @@ class RoleAssigner(commands.Cog):
                         color=discord.Colour.red(),
                     )
                     await channel.send(
-                        content=member.mention, embed=embed, delete_after=30
+                        content=member.mention,
+                        embed=embed,
+                        delete_after=config.display_time_of_trivial_error,
                     )
                     return
 
@@ -66,7 +68,9 @@ class RoleAssigner(commands.Cog):
                 color=discord.Colour.red(),
             )
             await message.channel.send(
-                content=member.mention, embed=embed, delete_after=30
+                content=member.mention,
+                embed=embed,
+                delete_after=config.display_time_of_trivial_error,
             )
         else:
             await member.add_roles(seminar_role)

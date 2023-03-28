@@ -35,6 +35,16 @@ class New(commands.Cog):
         # TODO: sanitize user's incorrect input patterns (e.g. some users may attach redundant quotation marks around the seminar name)
         seminar_name = seminar_name.lower()  # discord channel names should be lowercase
 
+        # ensure that `new_name` does not contain illegal characters
+        if seminar_name.contains((" ", "\t", ".", ",")):
+            embed = discord.Embed(
+                title="<:x:960095353577807883> ゼミ名が不正です",
+                description="ゼミ名に空白文字・カンマ・ピリオドを含めることはできません。",
+                color=discord.Colour.red(),
+            )
+            await ctx.respond(embed=embed)
+            return
+
         # Check whether a text channel named {seminar_name} already exists
         async with async_session() as session:
             async with session.begin():

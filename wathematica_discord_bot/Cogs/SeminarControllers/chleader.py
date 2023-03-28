@@ -52,17 +52,20 @@ class ChangeLeader(commands.Cog):
             )
             return
 
-        if "#" not in new_leader_name:
+        # when the user is mistakenly mentioned in the argument of this command,
+        # `new_leader_name` will be like "<@123456789012345678>"
+        if new_leader_name.startswith("<@") or "#" not in new_leader_name:
             embed = discord.Embed(
                 title="<:x:960095353577807883> ユーザ名を正しく指定してください",
                 description=textwrap.dedent(
                     f"""
                     ユーザ指定名は `ユーザ名#4桁の数字` の形をしています。
+                    ユーザ指定名はメンション記号の@を含まず、#の前後にスペースを含みません。
                     例えばあなたの場合は `{ctx.author.name}#{ctx.author.discriminator}` です。
-                    ユーザ指定名を確認する方法は上のリンクを参照してください。
+                    ユーザ指定名を確認する方法は以下のリンクを参照してください。
+                    https://discord2.tokyo/archives/1177#outline__1
                     """
                 ),
-                url="https://discord2.tokyo/archives/1177#outline__1",
                 color=discord.Colour.red(),
             )
             await ctx.respond(embed=embed)

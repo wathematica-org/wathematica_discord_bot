@@ -57,6 +57,16 @@ class Rename(commands.Cog):
 
         new_name = new_name.lower()  # discord channel names should be lowercase
 
+        # ensure that `new_name` does not contain illegal characters
+        if new_name.contains((" ", "\t", ".", ",")):
+            embed = discord.Embed(
+                title="<:x:960095353577807883> ゼミ名が不正です",
+                description="ゼミ名に空白文字・カンマ・ピリオドを含めることはできません。",
+                color=discord.Colour.red(),
+            )
+            await ctx.respond(embed=embed)
+            return
+
         # ensure that there's no existing seminar whose name is new_name
         async with async_session() as session:
             async with session.begin():

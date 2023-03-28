@@ -62,10 +62,10 @@ class ChangeLeader(commands.Cog):
                     ユーザ指定名は `ユーザ名#4桁の数字` の形をしています。
                     ユーザ指定名はメンション記号の@を含まず、#の前後にスペースを含みません。
                     例えばあなたの場合は `{ctx.author.name}#{ctx.author.discriminator}` です。
-                    ユーザ指定名を確認する方法はタイトルのリンク先を参照してください。
+                    ユーザ指定名を確認する方法は以下のリンクを参照してください。
+                    https://discord2.tokyo/archives/1177#outline__1
                     """
                 ),
-                url="https://discord2.tokyo/archives/1177#outline__1",
                 color=discord.Colour.red(),
             )
             await ctx.respond(embed=embed)

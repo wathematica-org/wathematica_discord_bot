@@ -36,7 +36,7 @@ class New(commands.Cog):
         seminar_name = seminar_name.lower()  # discord channel names should be lowercase
 
         # ensure that `new_name` does not contain illegal characters
-        if seminar_name.contains((" ", "\t", ".", ",")):
+        if any(bad_symbol in seminar_name for bad_symbol in (" ", "\t", ".", ",")):
             embed = discord.Embed(
                 title="<:x:960095353577807883> ゼミ名が不正です",
                 description="ゼミ名に空白文字・カンマ・ピリオドを含めることはできません。",

@@ -58,7 +58,7 @@ class Rename(commands.Cog):
         new_name = new_name.lower()  # discord channel names should be lowercase
 
         # ensure that `new_name` does not contain illegal characters
-        if new_name.contains((" ", "\t", ".", ",")):
+        if any(bad_symbol in new_name for bad_symbol in (" ", "\t", ".", ",")):
             embed = discord.Embed(
                 title="<:x:960095353577807883> ゼミ名が不正です",
                 description="ゼミ名に空白文字・カンマ・ピリオドを含めることはできません。",

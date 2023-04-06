@@ -53,13 +53,14 @@ class Help(commands.Cog):
                 ),
                 inline=False,
             )
-        if command_name in ["all", "move"]:
+        if command_name in ["all", "begin"]:
             embed.add_field(
-                name="/move",
+                name="/begin",
                 value=textwrap.dedent(
                     f"""
-                    このゼミを本始動させます。
-                    テキストチャンネルが{config.category_info["pending_seminars"]['name']}カテゴリから{config.category_info["ongoing_seminars"]['name']}カテゴリに移動します。
+                    仮立てのチャンネル内で実行した場合: このゼミを本始動します。
+                    休止中のチャンネル内で実行した場合: このゼミを再開します。
+                    テキストチャンネルが{config.category_info["ongoing_seminars"]['name']}カテゴリに移動します。
                     """
                 ),
                 inline=False,
@@ -71,6 +72,17 @@ class Help(commands.Cog):
                     """
                     ゼミの名称を変更します。
                     テキストチャンネルとロールの名前が更新され、ロール付与メッセージも更新されます。
+                    """
+                ),
+                inline=False,
+            )
+        if command_name in ["all", "pause"]:
+            embed.add_field(
+                name="/pause",
+                value=textwrap.dedent(
+                    f"""
+                    このゼミを休止します。本運用中のゼミでのみ実行できます。
+                    テキストチャンネルが{config.category_info["paused_seminars"]['name']}カテゴリに移動します。
                     """
                 ),
                 inline=False,

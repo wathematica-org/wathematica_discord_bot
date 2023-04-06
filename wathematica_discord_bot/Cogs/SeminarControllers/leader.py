@@ -18,6 +18,7 @@ class Leader(commands.Cog):
     @specific_categories_only(
         category_ids=[
             config.category_info["pending_seminars"]["id"],
+            config.category_info["paused_seminars"]["id"],
             config.category_info["ongoing_seminars"]["id"],
         ]
     )

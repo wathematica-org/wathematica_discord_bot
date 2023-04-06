@@ -15,13 +15,17 @@ category_info: dict[str, ChannelInfo] = {
         "id": 818049388986236941,
         "name": "全般",
     },
+    "pending_seminars": {
+        "id": 821747045315641435,
+        "name": "ゼミ(仮立て)",
+    },
     "ongoing_seminars": {
         "id": 822744303348482068,
         "name": "ゼミ(本運用)",
     },
-    "pending_seminars": {
-        "id": 821747045315641435,
-        "name": "ゼミ(仮立て)",
+    "paused_seminars": {
+        "id": 935449084762935346,
+        "name": "ゼミ(休止中)",
     },
     "finished_seminars": {
         "id": 853139587526164531,
@@ -38,4 +42,6 @@ channel_info: dict[str, ChannelInfo] = {
 display_time_of_trivial_error: int = 30
 
 # Discord server-specific settings
-guilds: list[int] = [818049388986236938]
+guild_id: int = 818049388986236938
+engineer_role_id: int = 822094687548342292
+interesting_emoji_id: int = 836259755302453299

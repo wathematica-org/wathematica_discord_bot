@@ -19,7 +19,7 @@ class New(commands.Cog):
     @slash_command(
         name="new",
         description="seminar_name が付与されたテキストチャンネルとロールを作成します。",
-        guild_ids=config.guilds,
+        guild_ids=[config.guild_id],
     )
     async def new(
         self,
@@ -54,6 +54,7 @@ class New(commands.Cog):
                             select(Seminar).where(
                                 Seminar.name == seminar_name,
                                 Seminar.seminar_state != SeminarState.FINISHED,
+                                Seminar.server_id == ctx.guild_id,
                             )
                         )
                     ).scalar_one()
@@ -70,6 +71,7 @@ class New(commands.Cog):
                                     select(Seminar).where(
                                         Seminar.name == seminar_name_candidate,
                                         Seminar.seminar_state != SeminarState.FINISHED,
+                                        Seminar.server_id == ctx.guild_id,
                                     )
                                 )
                             ).scalar_one()
@@ -172,9 +174,8 @@ class New(commands.Cog):
         message_to_role_settings_channel: discord.Message = (
             await role_setting_channel.send(embed=embed_to_role_settings_channel)
         )
-        await message_to_role_settings_channel.add_reaction(
-            "<:interesting:836259755302453299>"
-        )
+        interesting_emoji = await ctx.guild.fetch_emoji(config.interesting_emoji_id)
+        await message_to_role_settings_channel.add_reaction(interesting_emoji)
 
         # Prompt users to get the role at role_settings channel
         embed = discord.Embed(
@@ -193,6 +194,7 @@ class New(commands.Cog):
 
         # add this seminar to the database
         seminar = Seminar(
+            server_id=ctx.guild.id,
             name=seminar_name,
             created_at=datetime.datetime.now(),
             finished_at=None,

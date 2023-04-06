@@ -13,7 +13,7 @@ class Schedule(commands.Cog):
     @slash_command(
         name="schedule",
         description="日程調整用のメッセージを送信します。",
-        guild_ids=config.guilds,
+        guild_ids=[config.guild_id],
     )
     async def schedule(
         self,
@@ -25,12 +25,12 @@ class Schedule(commands.Cog):
 
         days_ = ["月", "火", "水", "木", "金", "土", "日"]
         reactions_ = [
-            "<:1_:837330855269105695>",
-            "<:2_:837330933077901312>",
-            "<:3_:837330960772104244>",
-            "<:4_:837330984810446918>",
-            "<:5_:837331010932834334>",
-            "<:6_:837331037058760775>",
+            "1️⃣",
+            "2️⃣",
+            "3️⃣",
+            "4️⃣",
+            "5️⃣",
+            "6️⃣",
         ]
         # TODO: Consider better implemenation
         days = days_[:5] if only_weekdays else days_

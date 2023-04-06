@@ -8,17 +8,17 @@ from sqlalchemy import select
 from sqlalchemy.exc import NoResultFound
 
 
-class Move(commands.Cog):
+class Pause(commands.Cog):
     def __init__(self, bot: discord.Bot):
         self.bot = bot
 
     @commands.guild_only()
     @slash_command(
-        name="move",
-        description=f'ゼミを{config.category_info["pending_seminars"]["name"]}から{config.category_info["ongoing_seminars"]["name"]}に移動させます',
+        name="pause",
+        description=f'ゼミを{config.category_info["ongoing_seminars"]["name"]}から{config.category_info["paused_seminars"]["name"]}に移動させます',
         guild_ids=config.guilds,
     )
-    async def move(self, ctx: discord.ApplicationContext):
+    async def pause(self, ctx: discord.ApplicationContext):
         # [ give additional information to type checker
         # guild_only() decorator ensures that ctx.guild is not None
         assert isinstance(ctx.guild, discord.Guild)
@@ -35,31 +35,31 @@ class Move(commands.Cog):
 
         if (
             ctx.channel.category is None
-            or ctx.channel.category.id != config.category_info["pending_seminars"]["id"]
+            or ctx.channel.category.id != config.category_info["ongoing_seminars"]["id"]
         ):
             embed = discord.Embed(
                 title="<:x:960095353577807883> 不正な操作です",
-                description=f'{config.category_info["pending_seminars"]["name"]}にあるテキストチャンネルでのみ実行可能です。',
+                description=f'{config.category_info["ongoing_seminars"]["name"]}にあるテキストチャンネルでのみ実行可能です。',
                 color=discord.Colour.red(),
             )
             await ctx.respond(embed=embed)
             return
 
-        ongoing_seminar_category = ctx.guild.get_channel(
-            config.category_info["ongoing_seminars"]["id"]
+        paused_seminar_category = ctx.guild.get_channel(
+            config.category_info["paused_seminars"]["id"]
         )
-        if not isinstance(ongoing_seminar_category, discord.CategoryChannel):
+        if not isinstance(paused_seminar_category, discord.CategoryChannel):
             embed = discord.Embed(
                 title="<:x:960095353577807883> システムエラー",
-                description="管理者向けメッセージ: `ongoing_seminars` カテゴリが見つかりませんでした。",
+                description="管理者向けメッセージ: `paused_seminars` カテゴリが見つかりませんでした。",
                 color=discord.Colour.red(),
             )
             await ctx.respond(embed=embed)
             return
 
-        # move the channel to the ongoing_seminar category
+        # move the channel to the paused_seminar category
         await ctx.channel.edit(
-            category=ongoing_seminar_category, reason=f"Requested by {ctx.author.name}"
+            category=paused_seminar_category, reason=f"Requested by {ctx.author.name}"
         )
 
         async with async_session() as session:
@@ -70,7 +70,7 @@ class Move(commands.Cog):
                             select(Seminar).where(Seminar.channel_id == ctx.channel.id)
                         )
                     ).scalar_one()
-                    this_seminar.seminar_state = SeminarState.ONGOING
+                    this_seminar.seminar_state = SeminarState.PAUSED
                 except NoResultFound:
                     embed = discord.Embed(
                         title="<:warning:960146803846684692> データベース編集失敗",
@@ -81,11 +81,11 @@ class Move(commands.Cog):
 
         embed = discord.Embed(
             title="<:white_check_mark:960095096563466250> チャンネル移動成功",
-            description=f'チャンネルを{config.category_info["ongoing_seminars"]["name"]}へ移動しました。',
+            description=f'チャンネルを{config.category_info["paused_seminars"]["name"]}へ移動しました。',
             color=discord.Colour.brand_green(),
         )
         await ctx.respond(embed=embed)
 
 
 def setup(bot: discord.Bot):
-    bot.add_cog(Move(bot))
+    bot.add_cog(Pause(bot))

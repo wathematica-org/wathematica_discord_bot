@@ -2,10 +2,12 @@ import textwrap
 
 import config
 import discord
+from checks import specific_categories_only, textchannel_only
 from database import async_session
 from discord import Option
 from discord.commands import slash_command
 from discord.ext import commands
+from exceptions import InvalidCategoryException, InvalidChannelTypeException
 from model import Seminar
 from sqlalchemy import select
 from sqlalchemy.exc import NoResultFound
@@ -16,6 +18,13 @@ class ChangeLeader(commands.Cog):
         self.bot = bot
 
     @commands.guild_only()
+    @specific_categories_only(
+        category_ids=[
+            config.category_info["pending_seminars"]["id"],
+            config.category_info["ongoing_seminars"]["id"],
+        ]
+    )
+    @textchannel_only()
     @slash_command(
         name="chleader",
         description="このゼミのゼミ長を変更します",
@@ -37,20 +46,6 @@ class ChangeLeader(commands.Cog):
         # In guild, ctx.author is always a Member
         assert isinstance(ctx.author, discord.Member)
         # ]
-
-        if ctx.channel.category is None or ctx.channel.category.id not in (
-            config.category_info["pending_seminars"]["id"],
-            config.category_info["ongoing_seminars"]["id"],
-        ):
-            embed = discord.Embed(
-                title="<:x:960095353577807883> 不正な操作です",
-                description=f'{config.category_info["ongoing_seminars"]["name"]}または{config.category_info["pending_seminars"]["name"]}にあるテキストチャンネルでのみ実行可能です。',
-                color=discord.Colour.red(),
-            )
-            await ctx.respond(
-                embed=embed, delete_after=config.display_time_of_trivial_error
-            )
-            return
 
         # when the user is mistakenly mentioned in the argument of this command,
         # `new_leader_name` will be like "<@123456789012345678>"
@@ -87,7 +82,10 @@ class ChangeLeader(commands.Cog):
                 try:
                     this_seminar: Seminar = (
                         await session.execute(
-                            select(Seminar).where(Seminar.channel_id == ctx.channel.id)
+                            select(Seminar).where(
+                                Seminar.channel_id == ctx.channel.id,
+                                Seminar.server_id == ctx.guild_id,
+                            )
                         )
                     ).scalar_one()
                     current_leader_id = this_seminar.leader_id
@@ -122,6 +120,31 @@ class ChangeLeader(commands.Cog):
             color=discord.Colour.brand_green(),
         )
         await ctx.respond(embed=embed)
+
+    @chleader.error
+    async def chleader_error(
+        self, ctx: discord.ApplicationContext, error: commands.CheckFailure
+    ):
+        if isinstance(error, InvalidChannelTypeException):
+            embed = discord.Embed(
+                title="<:x:960095353577807883> 不正な操作です",
+                description="このコマンドはスレッド内では実行できません。",
+                color=discord.Colour.red(),
+            )
+            await ctx.respond(embed=embed)
+            return
+        if isinstance(error, InvalidCategoryException):
+            embed = discord.Embed(
+                title="<:x:960095353577807883> 不正な操作です",
+                description=f'{config.category_info["pending_seminars"]["name"]}または{config.category_info["ongoing_seminars"]["name"]}にあるテキストチャンネルでのみ実行可能です。',
+                color=discord.Colour.red(),
+            )
+            await ctx.respond(
+                embed=embed, delete_after=config.display_time_of_trivial_error
+            )
+            return
+
+        raise Exception("Unexpected error occurred.")
 
 
 def setup(bot: discord.Bot):

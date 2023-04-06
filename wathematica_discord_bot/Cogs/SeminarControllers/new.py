@@ -54,6 +54,7 @@ class New(commands.Cog):
                             select(Seminar).where(
                                 Seminar.name == seminar_name,
                                 Seminar.seminar_state != SeminarState.FINISHED,
+                                Seminar.server_id == ctx.guild_id,
                             )
                         )
                     ).scalar_one()
@@ -70,6 +71,7 @@ class New(commands.Cog):
                                     select(Seminar).where(
                                         Seminar.name == seminar_name_candidate,
                                         Seminar.seminar_state != SeminarState.FINISHED,
+                                        Seminar.server_id == ctx.guild_id,
                                     )
                                 )
                             ).scalar_one()
@@ -192,6 +194,7 @@ class New(commands.Cog):
 
         # add this seminar to the database
         seminar = Seminar(
+            server_id=ctx.guild.id,
             name=seminar_name,
             created_at=datetime.datetime.now(),
             finished_at=None,

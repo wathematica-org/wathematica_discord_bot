@@ -43,7 +43,10 @@ class Delete(commands.Cog):
                 try:
                     this_seminar: Seminar = (
                         await session.execute(
-                            select(Seminar).where(Seminar.name == seminar_name)
+                            select(Seminar).where(
+                                Seminar.name == seminar_name,
+                                Seminar.server_id == ctx.guild_id,
+                            )
                         )
                     ).scalar_one()
                     current_leader_id = this_seminar.leader_id

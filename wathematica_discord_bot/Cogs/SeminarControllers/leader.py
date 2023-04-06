@@ -26,7 +26,7 @@ class Leader(commands.Cog):
     @slash_command(
         name="leader",
         description="このゼミのゼミ長を表示します",
-        guild_ids=config.guilds,
+        guild_ids=[config.guild_id],
     )
     async def leader(self, ctx: discord.ApplicationContext):
         # [ give additional information to type checker

@@ -24,7 +24,7 @@ class Pause(commands.Cog):
     @slash_command(
         name="pause",
         description=f'ゼミを{config.category_info["ongoing_seminars"]["name"]}から{config.category_info["paused_seminars"]["name"]}に移動させます',
-        guild_ids=config.guilds,
+        guild_ids=[config.guild_id],
     )
     async def pause(self, ctx: discord.ApplicationContext):
         # [ give additional information to type checker

@@ -26,7 +26,7 @@ class Rename(commands.Cog):
     @slash_command(
         name="rename",
         description="ゼミを改名します。テキストチャンネルとロールの名前が変化します。",
-        guild_ids=config.guilds,
+        guild_ids=[config.guild_id],
     )
     async def rename(
         self,

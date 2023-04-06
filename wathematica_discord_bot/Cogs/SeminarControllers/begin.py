@@ -25,7 +25,7 @@ class Begin(commands.Cog):
     @slash_command(
         name="begin",
         description=f'ゼミを{config.category_info["ongoing_seminars"]["name"]}に移動させます',
-        guild_ids=config.guilds,
+        guild_ids=[config.guild_id],
     )
     async def begin(self, ctx: discord.ApplicationContext):
         # [ give additional information to type checker

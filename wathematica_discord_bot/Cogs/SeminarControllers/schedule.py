@@ -13,7 +13,7 @@ class Schedule(commands.Cog):
     @slash_command(
         name="schedule",
         description="日程調整用のメッセージを送信します。",
-        guild_ids=config.guilds,
+        guild_ids=[config.guild_id],
     )
     async def schedule(
         self,

@@ -28,7 +28,7 @@ class ChangeLeader(commands.Cog):
     @slash_command(
         name="chleader",
         description="このゼミのゼミ長を変更します",
-        guild_ids=config.guilds,
+        guild_ids=[config.guild_id],
     )
     async def chleader(
         self,

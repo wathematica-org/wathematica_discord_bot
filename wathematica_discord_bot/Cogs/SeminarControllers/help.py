@@ -139,7 +139,7 @@ class Help(commands.Cog):
     @slash_command(
         name="help",
         description="ヘルプを表示します。",
-        guild_ids=config.guilds,
+        guild_ids=[config.guild_id],
     )
     async def help(
         self,

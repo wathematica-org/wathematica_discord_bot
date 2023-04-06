@@ -27,7 +27,7 @@ class End(commands.Cog):
     @slash_command(
         name="end",
         description=f'終了したゼミを{config.category_info["finished_seminars"]["name"]}へ移動させ、ロールを削除します。',
-        guild_ids=config.guilds,
+        guild_ids=[config.guild_id],
     )
     async def end(self, ctx: discord.ApplicationContext):
         # [ give additional information to type checker

@@ -6,9 +6,11 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, MappedAsDataclass, mapped_co
 
 
 class SeminarState(enum.Enum):
-    PENDING = "pending"
-    ONGOING = "ongoing"
-    FINISHED = "finished"
+    # enum.auto() clarifies the fact that the value of the enum has no meaning
+    PENDING = enum.auto()
+    ONGOING = enum.auto()
+    PAUSED = enum.auto()
+    FINISHED = enum.auto()
 
 
 class Base(DeclarativeBase, MappedAsDataclass):
@@ -22,6 +24,7 @@ class Seminar(Base):
 
     # id will be automatically assigned by the database, so it should not be initialized in the constructor
     id: Mapped[int] = mapped_column(primary_key=True, init=False)
+    server_id: Mapped[int]
     name: Mapped[str]
     created_at: Mapped[datetime.datetime]
     finished_at: Mapped[Optional[datetime.datetime]]

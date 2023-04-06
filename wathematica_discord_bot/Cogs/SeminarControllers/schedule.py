@@ -13,7 +13,7 @@ class Schedule(commands.Cog):
     @slash_command(
         name="schedule",
         description="日程調整用のメッセージを送信します。",
-        guild_ids=config.guilds,
+        guild_ids=[config.guild_id],
     )
     async def schedule(
         self,
@@ -25,13 +25,12 @@ class Schedule(commands.Cog):
 
         days_ = ["月", "火", "水", "木", "金", "土", "日"]
         reactions_ = [
-            # Check Unicode emoji names here: https://emojipedia.org/
-            "\N{Keycap Digit One}",
-            "\N{Keycap Digit Two}",
-            "\N{Keycap Digit Three}",
-            "\N{Keycap Digit Four}",
-            "\N{Keycap Digit Five}",
-            "\N{Keycap Digit Six}",
+            "1️⃣",
+            "2️⃣",
+            "3️⃣",
+            "4️⃣",
+            "5️⃣",
+            "6️⃣",
         ]
         # TODO: Consider better implemenation
         days = days_[:5] if only_weekdays else days_
@@ -41,7 +40,7 @@ class Schedule(commands.Cog):
             message = await ctx.send(day)
             for reaction in reactions:
                 await message.add_reaction(reaction)
-            await message.add_reaction("\N{Crying Face}")
+            await message.add_reaction("😢")
 
         await ctx.respond("【日付調整】")
 

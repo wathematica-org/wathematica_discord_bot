@@ -17,7 +17,7 @@ class Delete(commands.Cog):
     @slash_command(
         name="delete",
         description="名前が seminar_name のゼミを削除します。",
-        guild_ids=config.guilds,
+        guild_ids=[config.guild_id],
     )
     async def delete(
         self,
@@ -43,7 +43,10 @@ class Delete(commands.Cog):
                 try:
                     this_seminar: Seminar = (
                         await session.execute(
-                            select(Seminar).where(Seminar.name == seminar_name)
+                            select(Seminar).where(
+                                Seminar.name == seminar_name,
+                                Seminar.server_id == ctx.guild_id,
+                            )
                         )
                     ).scalar_one()
                     current_leader_id = this_seminar.leader_id

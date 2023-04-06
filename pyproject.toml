@@ -8,15 +8,14 @@ packages = [{include = "wathematica_discord_bot"}]
 
 [tool.poetry.dependencies]
 python = "^3.10"
-py-cord = "^2.3.2"
-sqlalchemy = "^2.0.2"
+py-cord = "^2.4.1"
+sqlalchemy = "^2.0.9"
 aiosqlite = "^0.18.0"
 
 
 [tool.poetry.group.dev.dependencies]
-black = "^23.1.0"
-ruff = "^0.0.241"
-pyright = "^1.1.292"
+black = "^23.3.0"
+ruff = "^0.0.261"
 
 [build-system]
 requires = ["poetry-core"]

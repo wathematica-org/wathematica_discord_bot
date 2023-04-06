@@ -172,9 +172,8 @@ class New(commands.Cog):
         message_to_role_settings_channel: discord.Message = (
             await role_setting_channel.send(embed=embed_to_role_settings_channel)
         )
-        await message_to_role_settings_channel.add_reaction(
-            "<:interesting:836259755302453299>"
-        )
+        interesting_emoji = await ctx.guild.fetch_emoji(config.interesting_emoji_id)
+        await message_to_role_settings_channel.add_reaction(interesting_emoji)
 
         # Prompt users to get the role at role_settings channel
         embed = discord.Embed(

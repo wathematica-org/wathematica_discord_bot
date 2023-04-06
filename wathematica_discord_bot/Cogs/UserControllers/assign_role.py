@@ -23,7 +23,7 @@ class RoleAssigner(commands.Cog):
         if payload.channel_id != config.channel_info["role_settings"]["id"]:
             return
         # react only to "interesting" emoji
-        if payload.emoji.id != 836259755302453299:
+        if payload.emoji.id != config.interesting_emoji_id:
             return
         # ignore reactions attached to messages other than bot's message
         channel = self.bot.get_channel(payload.channel_id)

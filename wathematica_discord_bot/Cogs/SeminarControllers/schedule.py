@@ -25,12 +25,13 @@ class Schedule(commands.Cog):
 
         days_ = ["月", "火", "水", "木", "金", "土", "日"]
         reactions_ = [
-            "<:1_:837330855269105695>",
-            "<:2_:837330933077901312>",
-            "<:3_:837330960772104244>",
-            "<:4_:837330984810446918>",
-            "<:5_:837331010932834334>",
-            "<:6_:837331037058760775>",
+            # Check Unicode emoji names here: https://emojipedia.org/
+            "\N{Keycap Digit One}",
+            "\N{Keycap Digit Two}",
+            "\N{Keycap Digit Three}",
+            "\N{Keycap Digit Four}",
+            "\N{Keycap Digit Five}",
+            "\N{Keycap Digit Six}",
         ]
         # TODO: Consider better implemenation
         days = days_[:5] if only_weekdays else days_
@@ -40,7 +41,7 @@ class Schedule(commands.Cog):
             message = await ctx.send(day)
             for reaction in reactions:
                 await message.add_reaction(reaction)
-            await message.add_reaction("😢")
+            await message.add_reaction("\N{Crying Face}")
 
         await ctx.respond("【日付調整】")
 

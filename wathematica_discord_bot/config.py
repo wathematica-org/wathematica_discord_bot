@@ -43,3 +43,5 @@ display_time_of_trivial_error: int = 30
 
 # Discord server-specific settings
 guilds: list[int] = [818049388986236938]
+engineer_role_id: int = 822094687548342292
+interesting_emoji_id: int = 836259755302453299

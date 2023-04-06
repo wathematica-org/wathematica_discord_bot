@@ -14,9 +14,9 @@ class Reload(commands.Cog):
         description="[技術部専用] 指定されたCogをリロードします",
         guild_ids=config.guilds,
     )
-    # 822094687548342292 is the id of '技術部' role
-    # see https://docs.pycord.dev/en/master/ext/commands/api.html#checks to know how to use 'checker' decorators like 'has_role'
-    @commands.has_role(822094687548342292)
+    # see https://docs.pycord.dev/en/master/ext/commands/api.html#checks to
+    # know how to use 'checker' decorators like 'has_role'
+    @commands.has_role(config.engineer_role_id)
     async def reload(
         self,
         ctx: discord.ApplicationContext,

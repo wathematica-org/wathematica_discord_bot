@@ -1,6 +1,6 @@
 import config
 import discord
-from discord import Option
+from discord import ExtensionNotFound, ExtensionNotLoaded, Option
 from discord.commands import slash_command
 from discord.ext import commands
 
@@ -24,17 +24,26 @@ class Reload(commands.Cog):
     ):
         # reload specified cog
         # cog_specifier will be like "Cogs.AdminTools.reload"
-        self.bot.reload_extension(cog_specifier)
-        embed = discord.Embed(
-            title="<:arrows_counterclockwise:960172711924088882> Cogリロード成功",
-            description=f"Cog `{cog_specifier}` をリロードしました。",
-            color=discord.Colour.brand_green(),
-        )
-        await ctx.respond(embed=embed)
+        try:
+            self.bot.reload_extension(cog_specifier)
+        except (ExtensionNotLoaded, ExtensionNotFound):
+            embed = discord.Embed(
+                title="<:x:960095353577807883> Cogリロード失敗",
+                description=f"Cog `{cog_specifier}` が見つかりませんでした。",
+                color=discord.Colour.red(),
+            )
+            await ctx.respond(embed=embed)
+        else:
+            embed = discord.Embed(
+                title="<:arrows_counterclockwise:960172711924088882> Cogリロード成功",
+                description=f"Cog `{cog_specifier}` をリロードしました。",
+                color=discord.Colour.brand_green(),
+            )
+            await ctx.respond(embed=embed)
 
     @reload.error
     async def reload_error(
-        self, error: commands.CheckFailure, ctx: discord.ApplicationContext
+        self, ctx: discord.ApplicationContext, error: commands.CheckFailure
     ):
         if isinstance(error, commands.CheckFailure):
             embed = discord.Embed(
@@ -43,8 +52,9 @@ class Reload(commands.Cog):
                 color=discord.Colour.red(),
             )
             await ctx.respond(embed=embed)
-        else:
-            raise Exception("Unexpected error occurred in reload.")
+            return
+
+        raise Exception("Unexpected error occurred in reload.")
 
 
 def setup(bot: discord.Bot):

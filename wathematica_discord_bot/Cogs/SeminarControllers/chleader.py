@@ -33,7 +33,9 @@ class ChangeLeader(commands.Cog):
     async def chleader(
         self,
         ctx: discord.ApplicationContext,
-        new_leader_name: Option(input_type=str, description="新ゼミ長のユーザ指定名", required=True),  # type: ignore
+        new_leader_name: Option(
+            input_type=str, description="新ゼミ長のユーザ指定名", required=True
+        ),  # type: ignore
     ):
         # [ give additional information to type checker
         assert isinstance(new_leader_name, str)
@@ -49,16 +51,13 @@ class ChangeLeader(commands.Cog):
 
         # when the user is mistakenly mentioned in the argument of this command,
         # `new_leader_name` will be like "<@123456789012345678>"
-        if new_leader_name.startswith("<@") or "#" not in new_leader_name:
+        if new_leader_name.startswith("<@"):
             embed = discord.Embed(
-                title="<:x:960095353577807883> ユーザ名を正しく指定してください",
+                title="<:x:960095353577807883> ユーザIDを正しく指定してください",
                 description=textwrap.dedent(
                     f"""
-                    ユーザ指定名は `ユーザ名#4桁の数字` の形をしています。
-                    ユーザ指定名はメンション記号の@を含まず、#の前後にスペースを含みません。
-                    例えばあなたの場合は `{ctx.author.name}#{ctx.author.discriminator}` です。
-                    ユーザ指定名を確認する方法は以下のリンクを参照してください。
-                    https://discord2.tokyo/archives/1177#outline__1
+                    ユーザをメンションするのではなく、IDを指定してください。
+                    例えばあなたのIDは `{ctx.author.name}` です。
                     """
                 ),
                 color=discord.Colour.red(),

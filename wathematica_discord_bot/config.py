@@ -12,29 +12,29 @@ class ChannelInfo(TypedDict):
 bot_name: str = "Wathematica Bot"
 category_info: dict[str, ChannelInfo] = {
     "general": {
-        "id": 818049388986236941,
+        "id": 1080865149902131270,
         "name": "全般",
     },
     "pending_seminars": {
-        "id": 821747045315641435,
+        "id": 1089089108120457278,
         "name": "ゼミ(仮立て)",
     },
     "ongoing_seminars": {
-        "id": 822744303348482068,
+        "id": 1089089162461855804,
         "name": "ゼミ(本運用)",
     },
     "paused_seminars": {
-        "id": 935449084762935346,
+        "id": 1089089754483654687,
         "name": "ゼミ(休止中)",
     },
     "finished_seminars": {
-        "id": 853139587526164531,
+        "id": 1089089785362120744,
         "name": "ゼミ(終了)",
     },
 }
 channel_info: dict[str, ChannelInfo] = {
     "role_settings": {
-        "id": 828812752377610322,
+        "id": 1093502316147118140,
         "name": "権限設定",
     },
 }
@@ -42,6 +42,6 @@ channel_info: dict[str, ChannelInfo] = {
 display_time_of_trivial_error: int = 30
 
 # Discord server-specific settings
-guild_id: int = 818049388986236938
-engineer_role_id: int = 822094687548342292
-interesting_emoji_id: int = 836259755302453299
+guild_id: int = 1080865149436571688
+engineer_role_id: int = 1089104583642579055
+interesting_emoji_id: int = 1093517491470352467

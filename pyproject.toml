@@ -4,13 +4,13 @@ version = "0.1.0"
 description = ""
 authors = ["Takaaki Toda <todatakaaki@gmail.com>"]
 readme = "README.md"
-packages = [{include = "wathematica_discord_bot"}]
 
 [tool.poetry.dependencies]
 python = "^3.10"
 py-cord = "^2.4.1"
 sqlalchemy = "^2.0.9"
 aiosqlite = "^0.18.0"
+greenlet = "^3.0.2"
 
 
 [tool.poetry.group.dev.dependencies]

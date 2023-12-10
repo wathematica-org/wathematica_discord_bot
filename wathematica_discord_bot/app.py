@@ -45,5 +45,5 @@ if __name__ == "__main__":
         bot.run(token)
     else:
         raise FileNotFoundError(
-            "[No credential file was found!] Contact admin and get the .credential file, which contains secret token, "
+            "[No credential file was found!] Contact admin and get the .credential file, which contains secret token."
         )

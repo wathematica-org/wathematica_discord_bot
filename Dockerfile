@@ -4,9 +4,9 @@ FROM python:3.12
 RUN apt-get update && apt-get install --no-install-recommends -y curl ca-certificates
 
 # setup uv
-RUN curl -LsSf https://astral.sh/uv/install.sh | sh
-RUN ["/bin/bash", "-c", "$HOME/.cargo/env"]
+RUN curl -LsSf https://astral.sh/uv/install.sh | sh && \
+    echo '. $HOME/.cargo/env' >> $HOME/.bashrc
 
 # install packages
 COPY uv.lock pyproject.toml .python-version /
-RUN uv sync
+RUN . $HOME/.bashrc && uv sync

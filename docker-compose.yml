@@ -2,9 +2,9 @@ version: '3'
 services:
   bot:
     container_name: discord_bot
-    build:
-      context: .
-      dockerfile: Dockerfile
+    build: .
+    environment:
+      - PATH=/root/.cargo/bin:${PATH}
     volumes:
       - ./wathematica_discord_bot:/app_root
     working_dir: '/app_root'

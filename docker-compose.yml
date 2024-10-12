@@ -8,4 +8,4 @@ services:
     volumes:
       - ./wathematica_discord_bot:/app_root
     working_dir: '/app_root'
-    command: 'python3 app.py'
+    command: 'uv run python app.py'

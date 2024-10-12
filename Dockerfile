@@ -1,21 +1,12 @@
-FROM python:3.10-bullseye
+FROM python:3.12
 
-ENV PYTHONUNBUFFERED=1 \
-    PYTHONDONTWRITEBYTECODE=1 \
-    PIP_NO_CACHE_DIR=off \
-    PIP_DISABLE_PIP_VERSION_CHECK=on \
-    PIP_DEFAULT_TIMEOUT=100 \
-    POETRY_HOME="/opt/poetry" \
-    POETRY_VIRTUALENVS_CREATE=false
-
-ENV PATH="$POETRY_HOME/bin:$PATH"
-
+# ensure that the environment has curl and certificates are up to date
 RUN apt-get update && apt-get install --no-install-recommends -y curl ca-certificates
 
-RUN curl -sSL https://install.python-poetry.org | python3 -
+# setup uv
+RUN curl -LsSf https://astral.sh/uv/install.sh | sh && \
+    echo '. $HOME/.cargo/env' >> $HOME/.bashrc
 
-WORKDIR /tmp
-ENV POETRY_NO_INTERACTION=1
-COPY poetry.lock pyproject.toml ./
-RUN poetry install --only main --no-root
-WORKDIR /
+# install packages
+COPY uv.lock pyproject.toml .python-version /
+RUN . $HOME/.bashrc && uv sync

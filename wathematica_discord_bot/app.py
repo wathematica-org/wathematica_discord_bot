@@ -37,13 +37,13 @@ if __name__ == "__main__":
     bot.load_extension("Cogs.admin_tools")
     bot.load_extension("Cogs.seminar_controllers")
     bot.load_extension("Cogs.user_controllers")
-    if os.path.exists(".credential"):
-        with open(".credential") as credential_file:
+    if os.path.exists("/run/secrets/discord_token"):
+        with open("/run/secrets/discord_token") as discord_token_file:
             # Strip the tailing newline character with strip()
-            token = credential_file.readline().strip()
+            token = discord_token_file.readline().strip()
         # Launch bot
         bot.run(token)
     else:
         raise FileNotFoundError(
-            "[No credential file was found!] Contact admin and get the .credential file, which contains secret token."
+            "[NO TOKEN PROVIDED] check docker-compose.yml to see how you can expose token at /run/secrets/discord_token"
         )

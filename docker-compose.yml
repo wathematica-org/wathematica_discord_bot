@@ -8,4 +8,9 @@ services:
     volumes:
       - ./wathematica_discord_bot:/app_root
     working_dir: '/app_root'
+    secrets:
+      - discord_token
     command: 'uv run python app.py'
+secrets:
+  discord_token:
+    file: .discord_token

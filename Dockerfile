@@ -8,5 +8,5 @@ RUN curl -LsSf https://astral.sh/uv/install.sh | sh
 RUN ["/bin/bash", "-c", "$HOME/.cargo/env"]
 
 # install packages
-COPY uv.lock pyproject.toml /
+COPY uv.lock pyproject.toml .python-version /
 RUN uv sync

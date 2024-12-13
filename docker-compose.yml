@@ -3,13 +3,17 @@ services:
     container_name: discord_bot
     build: .
     environment:
-      - PATH=/root/.cargo/bin:${PATH}
+      UV_PROJECT_ENVIRONMENT: /venv # create virtual environment in /venv inside the container
     volumes:
-      - ./wathematica_discord_bot:/app_root
-    working_dir: '/app_root'
+      - type: bind
+        source: ./wathematica_discord_bot
+        target: /app_root
+    working_dir: /app_root
     secrets:
       - discord_token
-    command: 'uv run python app.py'
+    tty: true
+    stdin_open: true
+    command: uv run app.py
 secrets:
   discord_token:
     file: .discord_token

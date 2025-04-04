@@ -1,10 +1,10 @@
-# fly.toml app configuration file generated for wathematica-discord-bot-haruto on 2025-03-14T16:51:21+09:00
+# fly.toml app configuration file generated for wathematica-discord-bot-broken-wave-5389 on 2025-04-04T17:27:02+09:00
 #
 # See https://fly.io/docs/reference/configuration/ for information about how to use this file.
 #
 
-app = 'wathematica-discord-bot-haruto'
-primary_region = 'nrt'
+app = 'wathematica-discord-bot'
+primary_region = 'iad'
 
 [build]
 
@@ -20,6 +20,6 @@ primary_region = 'nrt'
   processes = ['app']
 
 [[vm]]
-  memory = '1gb'
+  memory = '512mb'
   cpu_kind = 'shared'
   cpus = 1

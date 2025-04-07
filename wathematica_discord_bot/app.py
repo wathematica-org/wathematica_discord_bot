@@ -45,8 +45,14 @@ if __name__ == "__main__":
             # Strip the tailing newline character with strip()
             token = discord_token_file.readline().strip()
         # Launch bot
+        
         bot.run(token)
     else:
-        raise FileNotFoundError(
-            "[NO TOKEN PROVIDED] check docker-compose.yml to see how you can expose token at /run/secrets/discord_token"
-        )
+        token = os.environ.get("discord_token")
+        if token is None:
+            raise FileNotFoundError(
+                "[NO TOKEN PROVIDED] check docker-compose.yml to see how you can expose token at /run/secrets/discord_token"
+            )
+        print("SUCCESS to get token by env.")
+        bot.run(token)
+     

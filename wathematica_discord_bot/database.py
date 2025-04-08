@@ -24,6 +24,9 @@ else:
         raise FileNotFoundError(
             "[NO TOKEN PROVIDED] check docker-compose.yml to see how you can expose token at /run/secrets/database_url"
         )
+    
+db_url = db_url.replace("postgres://", "postgresql+asyncpg://")
+db_url = db_url.replace("sslmode", "ssl")
 
 print("database_url", db_url)
 engine = create_async_engine(db_url)

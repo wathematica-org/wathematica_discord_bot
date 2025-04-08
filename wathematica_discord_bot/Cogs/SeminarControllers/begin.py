@@ -46,9 +46,26 @@ class Begin(commands.Cog):
             return
 
         # move the channel to the ongoing_seminar category
-        await ctx.channel.edit(
+        try:
+            await ctx.channel.edit(
             category=ongoing_seminar_category, reason=f"Requested by {ctx.author.name}"
-        )
+            )
+        except discord.errors.HTTPException as e :
+            if e.code == 50035 and "Maximum number of channels in category reached" in e.text:
+                ongoing_seminar_category = ctx.guild.get_channel(config.category_info["ongoing_seminar2"]["id"])
+                if not isinstance(ongoing_seminar_category, discord.CategoryChannel):
+                    embed = discord.Embed(
+                        title="<:x:960095353577807883> システムエラー",
+                        description="管理者向けメッセージ: `ongoing_seminars2` カテゴリが見つかりませんでした。",
+                        color=discord.Colour.red(),
+                    )
+                    await ctx.respond(embed=embed)
+                    return 
+                await ctx.channel.edit(
+                    category=ongoing_seminar_category, reason=f"Requested by {ctx.author.name}"
+                )
+        except Exception as e:
+            print(f"予期せぬエラー: {e}")
 
         async with async_session() as session:
             async with session.begin():
@@ -76,7 +93,6 @@ class Begin(commands.Cog):
             color=discord.Colour.brand_green(),
         )
         await ctx.respond(embed=embed)
-
     @begin.error
     async def begin_error(
         self, ctx: discord.ApplicationContext, error: commands.CheckFailure

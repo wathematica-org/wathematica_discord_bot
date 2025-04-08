@@ -52,7 +52,7 @@ class Begin(commands.Cog):
             )
         except discord.errors.HTTPException as e :
             if e.code == 50035 and "Maximum number of channels in category reached" in e.text:
-                ongoing_seminar_category = ctx.guild.get_channel(config.category_info["ongoing_seminar2"]["id"])
+                ongoing_seminar_category = ctx.guild.get_channel(config.category_info["ongoing_seminars2"]["id"])
                 if not isinstance(ongoing_seminar_category, discord.CategoryChannel):
                     embed = discord.Embed(
                         title="<:x:960095353577807883> システムエラー",

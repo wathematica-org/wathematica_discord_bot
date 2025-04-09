@@ -1,5 +1,7 @@
+import config
 import os
 from typing import Optional
+
 
 import discord
 
@@ -30,6 +32,7 @@ if __name__ == "__main__":
     intents: discord.Intents = discord.Intents.all()
     intents.typing = False  # Don't react to user's typing event
     intents.presences = False  # Don't react to change of each user's presence
+    config.load_json()
 
     bot = WathematicaBot(intents=intents, description="Wathematicaのゼミを管理します。")
     # Check how to import cogs at https://docs.pycord.dev/en/stable/ext/commands/extensions.html
@@ -42,8 +45,14 @@ if __name__ == "__main__":
             # Strip the tailing newline character with strip()
             token = discord_token_file.readline().strip()
         # Launch bot
+        
         bot.run(token)
     else:
-        raise FileNotFoundError(
-            "[NO TOKEN PROVIDED] check docker-compose.yml to see how you can expose token at /run/secrets/discord_token"
-        )
+        token = os.environ.get("discord_token")
+        if token is None:
+            raise FileNotFoundError(
+                "[NO TOKEN PROVIDED] check docker-compose.yml to see how you can expose token at /run/secrets/discord_token"
+            )
+        print("SUCCESS to get token by env.")
+        bot.run(token)
+     

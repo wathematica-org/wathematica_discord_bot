@@ -3,6 +3,7 @@
 
 ### My Settings ###
 .discord_token
+.database_url
 database.db
 *.bak
 

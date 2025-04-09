@@ -1,16 +1,17 @@
 services:
   bot:
     container_name: discord_bot
-    build: .
+    build: ..
     environment:
       UV_PROJECT_ENVIRONMENT: /venv # create virtual environment in /venv inside the container
     volumes:
       - type: bind
-        source: ./wathematica_discord_bot
+        source: ../wathematica_discord_bot
         target: /app_root
     working_dir: /app_root
     secrets:
       - discord_token
+      - database_url
     tty: true
     stdin_open: true
     command: uv run app.py
@@ -18,3 +19,5 @@ services:
 secrets:
   discord_token:
     file: .discord_token
+  database_url:
+    file: .database_url

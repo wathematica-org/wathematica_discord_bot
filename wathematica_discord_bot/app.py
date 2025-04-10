@@ -2,6 +2,7 @@ import config
 import os
 from typing import Optional
 
+from database import DatabaseSingleton
 
 import discord
 
@@ -10,10 +11,13 @@ class WathematicaBot(discord.Bot):
     def __init__(
         self,
         intents: discord.Intents,
+        db_url: str,
         description: Optional[str] = None,
         *args,
         **options,
     ):
+        print("db_url =", db_url)
+        self.db = DatabaseSingleton(db_url)
         super().__init__(intents=intents, description=description, *args, **options)
 
     async def on_ready(self):
@@ -23,6 +27,7 @@ class WathematicaBot(discord.Bot):
             )
             await self.change_presence(activity=activity)
             print(f"Successfully logged in as {self.user.name}")
+            await self.db.init_db()
         else:
             raise Exception("Failed to log in to Discord server.")
 
@@ -34,12 +39,26 @@ if __name__ == "__main__":
     intents.presences = False  # Don't react to change of each user's presence
     config.load_json()
 
-    bot = WathematicaBot(intents=intents, description="Wathematicaのゼミを管理します。")
+    # load database url from secrets or env
+    if os.path.exists("/run/secrets/database_url"):
+        with open("/run/secrets/database_url") as database_url_file:
+            # Strip the tailing newline character with strip()
+            db_url = database_url_file.readline().strip()
+    else:
+        db_url = os.environ.get("database_url")
+        if db_url is None:
+            raise FileNotFoundError(
+                "[NO TOKEN PROVIDED] check docker-compose.yml to see how you can expose db_url at /run/secrets/database_url"
+            )
+        print("SUCCESS to get database_url by env.")
+
+    bot = WathematicaBot(intents=intents, db_url=db_url ,description="Wathematicaのゼミを管理します。")
     # Check how to import cogs at https://docs.pycord.dev/en/stable/ext/commands/extensions.html
     # Cogs should be specified as a relative path from the directory where this app.py is located
     bot.load_extension("Cogs.admin_tools")
     bot.load_extension("Cogs.seminar_controllers")
     bot.load_extension("Cogs.user_controllers")
+
     if os.path.exists("/run/secrets/discord_token"):
         with open("/run/secrets/discord_token") as discord_token_file:
             # Strip the tailing newline character with strip()

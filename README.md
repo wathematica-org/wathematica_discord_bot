@@ -22,6 +22,8 @@ Pythonによって実装されています。
 ### docker-compose によるローカル環境での起動
 1. このレポジトリをクローン
 2. config下に、設定用のjsonファイルを作成する。
+3. congig.py内にあるbot_nameという変数をdeveloper portalで作成したbotの名前に変更する。
+4. 同様に、config.py内にあるconfig_file_pathを2で作成したjsonファイルに変更する。
 3. Dockerfileと同じ階層に.discord_tokenという名前のファイルを作成してコピーしておいたtokenを貼り付ける
 4. 起動して動作を確認する
 

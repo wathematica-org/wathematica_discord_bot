@@ -1,6 +1,7 @@
 import config
 import discord
 from checks import specific_categories_only, textchannel_only
+from database import async_session
 from discord.commands import slash_command
 from discord.ext import commands
 from exceptions import InvalidCategoryException, InvalidChannelTypeException
@@ -8,11 +9,9 @@ from model import Seminar, SeminarState
 from sqlalchemy import select
 from sqlalchemy.exc import NoResultFound
 
-from app import WathematicaBot
-
 
 class Begin(commands.Cog):
-    def __init__(self, bot: WathematicaBot):
+    def __init__(self, bot: discord.Bot):
         self.bot = bot
 
     @commands.guild_only()
@@ -47,28 +46,11 @@ class Begin(commands.Cog):
             return
 
         # move the channel to the ongoing_seminar category
-        try:
-            await ctx.channel.edit(
+        await ctx.channel.edit(
             category=ongoing_seminar_category, reason=f"Requested by {ctx.author.name}"
-            )
-        except discord.errors.HTTPException as e :
-            if e.code == 50035 and "Maximum number of channels in category reached" in e.text:
-                ongoing_seminar_category = ctx.guild.get_channel(config.category_info["ongoing_seminars2"]["id"])
-                if not isinstance(ongoing_seminar_category, discord.CategoryChannel):
-                    embed = discord.Embed(
-                        title="<:x:960095353577807883> システムエラー",
-                        description="管理者向けメッセージ: `ongoing_seminars2` カテゴリが見つかりませんでした。",
-                        color=discord.Colour.red(),
-                    )
-                    await ctx.respond(embed=embed)
-                    return 
-                await ctx.channel.edit(
-                    category=ongoing_seminar_category, reason=f"Requested by {ctx.author.name}"
-                )
-        except Exception as e:
-            print(f"予期せぬエラー: {e}")
+        )
 
-        async with self.bot.db.create_session() as session:
+        async with async_session() as session:
             async with session.begin():
                 try:
                     this_seminar: Seminar = (
@@ -94,6 +76,7 @@ class Begin(commands.Cog):
             color=discord.Colour.brand_green(),
         )
         await ctx.respond(embed=embed)
+
     @begin.error
     async def begin_error(
         self, ctx: discord.ApplicationContext, error: commands.CheckFailure

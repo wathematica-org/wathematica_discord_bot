@@ -9,6 +9,7 @@ from sqlalchemy.exc import NoResultFound
 
 from app import WathematicaBot
 
+
 class Delete(commands.Cog):
     def __init__(self, bot: WathematicaBot):
         self.bot = bot

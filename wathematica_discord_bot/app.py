@@ -45,7 +45,7 @@ if __name__ == "__main__":
             # Strip the tailing newline character with strip()
             db_url = database_url_file.readline().strip()
     else:
-        db_url = os.environ.get("database_url")
+        db_url = os.environ.get("DATABASE_URL")
         if db_url is None:
             raise FileNotFoundError(
                 "[NO TOKEN PROVIDED] check docker-compose.yml to see how you can expose db_url at /run/secrets/database_url"

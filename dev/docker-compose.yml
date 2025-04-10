@@ -17,7 +17,7 @@ services:
     command: uv run app.py
     restart: always
     extra_hosts:
-      - "host.docker.internal:host-gateway"  # ここを追加してホストへの名前解決を行う
+      - "host.docker.internal:host-gateway"  # for local postgres server
 secrets:
   discord_token:
     file: .discord_token

@@ -47,7 +47,7 @@ class Begin(commands.Cog):
 
         # move the channel to the ongoing_seminar category
 
-        number_of_channels =get_nuber_of_channel(ctx,config.category_info["ongoing_seminars"]["name"])
+        number_of_channels =await get_nuber_of_channel(ctx,config.category_info["ongoing_seminars"]["name"])
         if number_of_channels< MAX_CHANNELS :
             await ctx.channel.edit(
             category=ongoing_seminar_category, reason=f"Requested by {ctx.author.name}"
@@ -122,5 +122,5 @@ def setup(bot: discord.Bot):
 MAX_CHANNELS = 50
 
 async def get_nuber_of_channel(ctx :discord.ApplicationContext , category_name : str):
-    category = discord.utils.get(ctx.guild.category,name=category_name)
+    category = discord.utils.get(ctx.guild.categories,name=category_name)
     return len(category.channels)

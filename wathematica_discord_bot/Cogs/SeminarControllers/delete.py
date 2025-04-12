@@ -1,6 +1,5 @@
 import config
 import discord
-from database import async_session
 from discord import Option
 from discord.commands import slash_command
 from discord.ext import commands
@@ -8,9 +7,11 @@ from model import Seminar
 from sqlalchemy import select
 from sqlalchemy.exc import NoResultFound
 
+from app import WathematicaBot
+
 
 class Delete(commands.Cog):
-    def __init__(self, bot: discord.Bot):
+    def __init__(self, bot: WathematicaBot):
         self.bot = bot
 
     @commands.guild_only()
@@ -38,7 +39,7 @@ class Delete(commands.Cog):
 
         # this command must be executed by the leader of the seminar
         # or by someone who has the manage_channels permission
-        async with async_session() as session:
+        async with self.bot.db.create_session() as session:
             async with session.begin():
                 try:
                     this_seminar: Seminar = (
@@ -159,7 +160,7 @@ class Delete(commands.Cog):
             await ctx.respond(embed=embed)
 
         # delete this seminar from the database
-        async with async_session() as session:
+        async with self.bot.db.create_session() as session:
             async with session.begin():
                 await session.delete(this_seminar)
 

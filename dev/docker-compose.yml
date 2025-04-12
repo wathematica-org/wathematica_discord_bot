@@ -11,10 +11,15 @@ services:
     working_dir: /app_root
     secrets:
       - discord_token
+      - database_url
     tty: true
     stdin_open: true
     command: uv run app.py
     restart: always
+    extra_hosts:
+      - "host.docker.internal:host-gateway"  # for local postgres server
 secrets:
   discord_token:
     file: .discord_token
+  database_url:
+    file: .database_url

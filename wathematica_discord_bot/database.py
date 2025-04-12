@@ -1,32 +1,38 @@
-import asyncio
-import signal
-import sys
-
 from model import Base
-from sqlalchemy.ext.asyncio import AsyncEngine, async_sessionmaker, create_async_engine
+from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
+
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 
-async def create_table(engine: AsyncEngine):
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
+# ref: https://github.com/Deelite34/Discord-bot/blob/main/utils.py
+class MetaSingleton(type):
+    _instances = {}
 
+    def __call__(cls, *args, **kwargs):
+        if cls not in cls._instances:
+            cls._instances[cls] = super(MetaSingleton, cls).__call__(*args, **kwargs)
+        return cls._instances[cls]
 
-# define the engine that connects to the database
-engine = create_async_engine("sqlite+aiosqlite:///database.db")
-# define the sessionmaker that creates a "session", on which database operations are performed
-# See https://docs.sqlalchemy.org/en/20/orm/extensions/asyncio.html#synopsis-orm for further details
-async_session = async_sessionmaker(engine, expire_on_commit=False)
-# create tables related to Base. if they already exist, this coroutine does nothing.
-asyncio.run(create_table(engine=engine))
+# ref: https://github.com/Deelite34/Discord-bot/blob/main/db.py
+class DatabaseSingleton(metaclass=MetaSingleton):
+    def __init__(self, db_url):
+        self.dburl = db_url
+        self.engine = None
+        # self.base = declarative_base(name="Defined Base.")
+        self.session = None
 
+    async def init_db(self):
+        self.engine = create_async_engine(self.dburl, echo=True)
+        # async with self.engine.begin() as conn:
+        #     await conn.run_sync(self.base.metadata.create_all)
+        async with self.engine.begin() as conn:
+            # model.py からインポートした Base のメタデータを利用する
+            await conn.run_sync(Base.metadata.create_all)
 
-# define a signal handler to ensure the database connection is closed when the program is terminated
-def signal_handler(signal_num, frame):
-    loop = asyncio.get_running_loop()
-    loop.run_until_complete(engine.dispose())
-    sys.exit()
+    async def close_async(self):
+        # Use on shutdown
+        await self.engine.dispose()
 
-
-# register signal_handler to be called when the program is TERMinated or INTerrupted
-signal.signal(signal.SIGTERM, signal_handler)
-signal.signal(signal.SIGINT, signal_handler)
+    def create_session(self) -> AsyncSession:
+        session_maker = async_sessionmaker(bind=self.engine, expire_on_commit=False)
+        return session_maker()

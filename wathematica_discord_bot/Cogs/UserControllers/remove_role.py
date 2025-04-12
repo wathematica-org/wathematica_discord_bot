@@ -1,14 +1,15 @@
 import config
 import discord
-from database import async_session
 from discord.ext import commands
 from model import Seminar
 from sqlalchemy import select
 from sqlalchemy.exc import NoResultFound
 
+from app import WathematicaBot
+
 
 class RoleRemover(commands.Cog):
-    def __init__(self, bot: discord.Bot):
+    def __init__(self, bot: WathematicaBot):
         self.bot = bot
 
     @commands.Cog.listener()
@@ -41,7 +42,7 @@ class RoleRemover(commands.Cog):
         if not message.guild:
             return
 
-        async with async_session() as session:
+        async with self.bot.db.create_session() as session:
             async with session.begin():
                 try:
                     this_seminar: Seminar = (

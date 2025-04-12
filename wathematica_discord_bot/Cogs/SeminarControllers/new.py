@@ -2,7 +2,6 @@ import datetime
 
 import config
 import discord
-from database import async_session
 from discord import Option
 from discord.commands import slash_command
 from discord.ext import commands
@@ -10,9 +9,11 @@ from model import Seminar, SeminarState
 from sqlalchemy import select
 from sqlalchemy.exc import NoResultFound
 
+from app import WathematicaBot
+
 
 class New(commands.Cog):
-    def __init__(self, bot: discord.Bot):
+    def __init__(self, bot: WathematicaBot):
         self.bot = bot
 
     @commands.guild_only()
@@ -46,7 +47,7 @@ class New(commands.Cog):
             return
 
         # Check whether a text channel named {seminar_name} already exists
-        async with async_session() as session:
+        async with self.bot.db.create_session() as session:
             async with session.begin():
                 try:
                     (
@@ -204,7 +205,7 @@ class New(commands.Cog):
             role_id=new_role.id,
             role_setting_message_id=message_to_role_settings_channel.id,
         )
-        async with async_session() as session:
+        async with self.bot.db.create_session() as session:
             async with session.begin():
                 session.add(seminar)
 

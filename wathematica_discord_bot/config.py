@@ -11,7 +11,7 @@ class ChannelInfo(TypedDict):
 
 # Fundamental settings
 # FIXME: set bot_name as a discord bot user name
-bot_name: str = "Wathematica Bot"
+bot_name: str = "wathematica_bot"
 # FIXME: set config_file_path as a path to config file
 config_file_path = os.path.join(os.path.dirname(__file__), "config/config-2025.json")
 

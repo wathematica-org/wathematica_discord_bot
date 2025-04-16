@@ -31,6 +31,10 @@
         "role_settings": {
             "id": 1356233547228385360,
             "name": "権限設定"
+        },
+        "system": {
+            "id": 0,
+            "name": "system"
         }
     }
 }

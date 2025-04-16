@@ -9,6 +9,7 @@ from discord.ext import commands
 from model import Seminar, SeminarState
 from sqlalchemy import select
 from sqlalchemy.exc import NoResultFound
+from checks import specific_channels_only
 
 
 class New(commands.Cog):
@@ -16,6 +17,7 @@ class New(commands.Cog):
         self.bot = bot
 
     @commands.guild_only()
+    @specific_channels_only(config.channel_info["system"]["id"])
     @slash_command(
         name="new",
         description="seminar_name が付与されたテキストチャンネルとロールを作成します。",

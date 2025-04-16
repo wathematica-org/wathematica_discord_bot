@@ -26,6 +26,28 @@ def specific_categories_only(category_ids: list[int]):
 
     return commands.check(predicate)
 
+def specific_channels_only(channel_ids : list[int]):
+    """
+    Parameters:
+        channel_ids: list[int]
+            IDs of channels where this command can be executed.
+    Returns:
+        _ : bool
+            whether the channels where this command was executed matched any of channel_ids.
+    Raises:
+        InvalidChannelTypeException
+            raised when the channel where this command was executed matched none of channel_ids .        
+    """    
+    async def predicate(ctx: discord.ApplicationContext) -> bool:
+        if ctx.channel.id in channel_ids:
+            return True
+        else:
+            raise InvalidCategoryException(
+                "Command was executed in an invalid channels"
+            ) 
+        
+    return commands.check(predicate)
+
 
 def textchannel_only():
     """

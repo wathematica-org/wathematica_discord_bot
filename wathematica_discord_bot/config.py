@@ -12,8 +12,6 @@ class ChannelInfo(TypedDict):
 # Fundamental settings
 # FIXME: set bot_name as a discord bot user name
 bot_name: str = "Wathematica Bot"
-# FIXME: set config_file_path as a path to config file
-config_file_path = os.path.join(os.path.dirname(__file__), "config/config-2025.json")
 
 # category_info: dict[str, ChannelInfo]
 # channel_info: dict[str, ChannelInfo]
@@ -30,7 +28,7 @@ def load_json() -> None:
     global guild_id, engineer_role_id, interesting_emoji_id
     global display_time_of_trivial_error
     global category_info, channel_info
-    file_path = os.path.join(config_file_path)
+    file_path = os.path.join(os.path.dirname(__file__), "config/config-2025.json")
     with open(file_path, "r", encoding="utf-8") as f:
         data = json.load(f)
     server_info = data.get("server-info")

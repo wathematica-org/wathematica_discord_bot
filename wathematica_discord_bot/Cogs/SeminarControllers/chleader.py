@@ -22,6 +22,7 @@ class ChangeLeader(commands.Cog):
         category_ids=[
             config.category_info["pending_seminars"]["id"],
             config.category_info["ongoing_seminars"]["id"],
+            config.category_info["ongoing_seminars2"]["id"],
         ]
     )
     @textchannel_only()

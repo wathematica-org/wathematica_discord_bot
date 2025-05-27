@@ -19,6 +19,7 @@ class Pause(commands.Cog):
     @specific_categories_only(
         category_ids=[
             config.category_info["ongoing_seminars"]["id"],
+            config.category_info["ongoing_seminars2"]["id"],
         ]
     )
     @textchannel_only()
@@ -92,7 +93,7 @@ class Pause(commands.Cog):
         if isinstance(error, InvalidCategoryException):
             embed = discord.Embed(
                 title="<:x:960095353577807883> 不正な操作です",
-                description=f'{config.category_info["ongoing_seminars"]["name"]}にあるテキストチャンネルでのみ実行可能です。',
+                description=f'{config.category_info["ongoing_seminars"]["name"]}、または{config.category_info["ongoing_seminars2"]["id"]}にあるテキストチャンネルでのみ実行可能です。',
                 color=discord.Colour.red(),
             )
             await ctx.respond(embed=embed)

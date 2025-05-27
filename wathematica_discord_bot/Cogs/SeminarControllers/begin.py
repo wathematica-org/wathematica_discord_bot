@@ -67,7 +67,7 @@ class Begin(commands.Cog):
                 category=ongoing_seminar_category, reason=f"Requested by {ctx.author.name}"
             )
 
-        async with async_session() as session:
+        async with self.bot.db.create_session() as session:
             async with session.begin():
                 try:
                     this_seminar: Seminar = (

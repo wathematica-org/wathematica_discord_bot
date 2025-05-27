@@ -16,7 +16,7 @@ class WathematicaBot(discord.Bot):
         *args,
         **options,
     ):
-        print("db_url =", db_url)
+        print(f"{db_url=}")
         self.db = DatabaseSingleton(db_url)
         super().__init__(intents=intents, description=description, *args, **options)
 

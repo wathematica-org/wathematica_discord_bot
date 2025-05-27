@@ -24,7 +24,7 @@ Pythonによって実装されています。
 2. config下に、設定用のjsonファイルを作成する。
 3. congig.py内にあるbot_nameという変数をdeveloper portalで作成したbotの名前に変更する。
 4. 同様に、config.py内にあるconfig_file_pathを2で作成したjsonファイルに変更する。
-5. Dockerfileと同じ階層に.discord_tokenという名前のファイルを作成してコピーしておいたtokenを貼り付ける
+5. dev内に.discord_tokenという名前のファイルを作成してコピーしておいたtokenを貼り付ける
 6. 起動して動作を確認する `docker compose up` 
 
 ### fly.ioへのデプロイ

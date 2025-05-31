@@ -3,7 +3,6 @@ import datetime
 import config
 import discord
 from checks import specific_categories_only, textchannel_only
-from database import async_session
 from discord.commands import slash_command
 from discord.ext import commands
 from exceptions import InvalidCategoryException, InvalidChannelTypeException
@@ -11,9 +10,11 @@ from model import Seminar, SeminarState
 from sqlalchemy import select
 from sqlalchemy.exc import NoResultFound
 
+from app import WathematicaBot
+
 
 class End(commands.Cog):
-    def __init__(self, bot: discord.Bot):
+    def __init__(self, bot: WathematicaBot):
         self.bot = bot
 
     @commands.guild_only()
@@ -40,7 +41,7 @@ class End(commands.Cog):
 
         # this command must be executed by the leader of the seminar
         # or by someone who has the manage_channels permission
-        async with async_session() as session:
+        async with self.bot.db.create_session() as session:
             async with session.begin():
                 try:
                     this_seminar: Seminar = (
@@ -141,7 +142,7 @@ class End(commands.Cog):
             await ctx.respond(embed=embed)
 
         # mark this seminar as finished in the database
-        async with async_session() as session:
+        async with self.bot.db.create_session() as session:
             async with session.begin():
                 # here, it is ensured that the seminar exists in the database
                 this_seminar: Seminar = (

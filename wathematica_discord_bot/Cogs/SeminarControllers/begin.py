@@ -1,7 +1,6 @@
 import config
 import discord
 from checks import specific_categories_only, textchannel_only
-from database import async_session
 from discord.commands import slash_command
 from discord.ext import commands
 from exceptions import InvalidCategoryException, InvalidChannelTypeException
@@ -9,9 +8,11 @@ from model import Seminar, SeminarState
 from sqlalchemy import select
 from sqlalchemy.exc import NoResultFound
 
+from app import WathematicaBot
+
 
 class Begin(commands.Cog):
-    def __init__(self, bot: discord.Bot):
+    def __init__(self, bot: WathematicaBot):
         self.bot = bot
 
     @commands.guild_only()
@@ -66,7 +67,7 @@ class Begin(commands.Cog):
                 category=ongoing_seminar_category, reason=f"Requested by {ctx.author.name}"
             )
 
-        async with async_session() as session:
+        async with self.bot.db.create_session() as session:
             async with session.begin():
                 try:
                     this_seminar: Seminar = (
@@ -92,6 +93,7 @@ class Begin(commands.Cog):
             color=discord.Colour.brand_green(),
         )
         await ctx.respond(embed=embed)
+
     @begin.error
     async def begin_error(
         self, ctx: discord.ApplicationContext, error: commands.CheckFailure

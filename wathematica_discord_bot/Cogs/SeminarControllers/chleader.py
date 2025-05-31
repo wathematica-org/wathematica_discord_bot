@@ -3,7 +3,6 @@ import textwrap
 import config
 import discord
 from checks import specific_categories_only, textchannel_only
-from database import async_session
 from discord import Option
 from discord.commands import slash_command
 from discord.ext import commands
@@ -12,9 +11,11 @@ from model import Seminar
 from sqlalchemy import select
 from sqlalchemy.exc import NoResultFound
 
+from app import WathematicaBot
+
 
 class ChangeLeader(commands.Cog):
-    def __init__(self, bot: discord.Bot):
+    def __init__(self, bot: WathematicaBot):
         self.bot = bot
 
     @commands.guild_only()
@@ -77,7 +78,7 @@ class ChangeLeader(commands.Cog):
             return
 
         # check if the user who executed this command has permission to change the leader
-        async with async_session() as session:
+        async with self.bot.db.create_session() as session:
             async with session.begin():
                 try:
                     this_seminar: Seminar = (

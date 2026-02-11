@@ -13,7 +13,7 @@ services:
       - discord_token
     tty: true
     stdin_open: true
-    command: uv run app.py
+    command: uv run app.py --config_file ./config/config-dev.json
     restart: always
 secrets:
   discord_token:

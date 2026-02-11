@@ -9,10 +9,6 @@ class ChannelInfo(TypedDict):
     id: int
     name: str
 
-# Fundamental settings
-# FIXME: set config_file_path as a path to config file
-config_file_path = os.path.join(os.path.dirname(__file__), "config/config-dev.json")
-
 # category_info: dict[str, ChannelInfo]
 # channel_info: dict[str, ChannelInfo]
 # # display error message for 30 seconds if the error is trivial
@@ -24,11 +20,10 @@ config_file_path = os.path.join(os.path.dirname(__file__), "config/config-dev.js
 # interesting_emoji_id: int
 
 
-def load_json() -> dict:
+def load_json(file_path: str) -> dict:
     global guild_id, engineer_role_id, interesting_emoji_id
     global display_time_of_trivial_error
     global category_info, channel_info
-    file_path = os.path.join(os.path.dirname(__file__), config_file_path)
     with open(file_path, "r", encoding="utf-8") as f:
         data = json.load(f)
     server_info = data.get("server-info")

@@ -12,7 +12,7 @@ async def create_table(engine: AsyncEngine):
 
 
 # define the engine that connects to the database
-engine = create_async_engine("sqlite+aiosqlite:///database.db")
+engine = create_async_engine("sqlite+aiosqlite:////data/database.db")
 # define the sessionmaker that creates a "session", on which database operations are performed
 # See https://docs.sqlalchemy.org/en/20/orm/extensions/asyncio.html#synopsis-orm for further details
 async_session = async_sessionmaker(engine, expire_on_commit=False)

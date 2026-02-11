@@ -15,4 +15,4 @@ COPY wathematica_discord_bot /app_root
 WORKDIR /app_root
 
 # default command
-CMD ["uv","run","app.py"]
+CMD ["uv","run","app.py","--config_file","./config/config-dev.json"]

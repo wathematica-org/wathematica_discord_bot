@@ -1,3 +1,4 @@
+import argparse
 import config
 import os
 from typing import Optional
@@ -26,13 +27,24 @@ class WathematicaBot(discord.Bot):
         else:
             raise Exception("Failed to log in to Discord server.")
 
+# fEnable type hinting and IntelliSense for parsed arguments
+class Args(argparse.Namespace):
+    config_file: str
+
+
+parser = argparse.ArgumentParser(description="Wathematica Discord Bot")
+parser.add_argument(
+    "--config_file", help="Path to the configuration file", required=True
+)
 
 if __name__ == "__main__":
+    args = parser.parse_args(namespace=Args())
     # If you don't know what intent is, visit https://docs.pycord.dev/en/stable/intents.html
     intents: discord.Intents = discord.Intents.all()
     intents.typing = False  # Don't react to user's typing event
     intents.presences = False  # Don't react to change of each user's presence
-    config.load_json()
+
+    config.load_json(args.config_file)
 
     bot = WathematicaBot(intents=intents, description="Wathematicaのゼミを管理します。")
     # Check how to import cogs at https://docs.pycord.dev/en/stable/ext/commands/extensions.html
@@ -45,7 +57,7 @@ if __name__ == "__main__":
             # Strip the tailing newline character with strip()
             token = discord_token_file.readline().strip()
         # Launch bot
-        
+        print(f'{token=}')
         bot.run(token)
     else:
         token = os.environ.get("discord_token")

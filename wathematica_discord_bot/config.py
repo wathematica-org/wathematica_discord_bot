@@ -9,10 +9,6 @@ class ChannelInfo(TypedDict):
     id: int
     name: str
 
-# Fundamental settings
-# FIXME: set bot_name as a discord bot user name
-bot_name: str = "Wathematica Bot"
-
 # category_info: dict[str, ChannelInfo]
 # channel_info: dict[str, ChannelInfo]
 # # display error message for 30 seconds if the error is trivial
@@ -24,11 +20,10 @@ bot_name: str = "Wathematica Bot"
 # interesting_emoji_id: int
 
 
-def load_json() -> None:
+def load_json(file_path: str) -> dict:
     global guild_id, engineer_role_id, interesting_emoji_id
     global display_time_of_trivial_error
     global category_info, channel_info
-    file_path = os.path.join(os.path.dirname(__file__), "config/config-2025.json")
     with open(file_path, "r", encoding="utf-8") as f:
         data = json.load(f)
     server_info = data.get("server-info")

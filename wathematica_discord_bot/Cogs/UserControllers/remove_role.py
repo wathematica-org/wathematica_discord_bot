@@ -36,7 +36,8 @@ class RoleRemover(commands.Cog):
         if not isinstance(channel, discord.TextChannel):
             return
         message = await channel.fetch_message(payload.message_id)
-        if message.author.name != config.bot_name:
+        # ignore messages which was not sent by bot
+        if not message.author.bot:
             return
         if not message.guild:
             return

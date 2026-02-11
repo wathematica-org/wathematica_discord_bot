@@ -29,15 +29,9 @@ def load_json(file_path: str) -> dict:
     server_info = data.get("server-info")
     guild_id = server_info.get("guild_id")
     engineer_role_id = server_info.get("engineer_role_id")
-    print(guild_id)
-    print(engineer_role_id)
     interesting_emoji_id = server_info.get("interesting_emoji_id",)
-    print(interesting_emoji_id)
     display_time_of_trivial_error = server_info.get(
         "display_time_of_trivial_error", 30
     )
-    print(display_time_of_trivial_error)
     category_info = data.get("category-info")
     channel_info = data.get("channel-info")
-    print(category_info)
-    print(channel_info)

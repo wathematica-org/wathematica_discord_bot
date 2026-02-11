@@ -58,7 +58,6 @@ if __name__ == "__main__":
             # Strip the tailing newline character with strip()
             token = discord_token_file.readline().strip()
         # Launch bot
-        print(f"{token=}")
         bot.run(token)
     else:
         token = os.environ.get("discord_token")

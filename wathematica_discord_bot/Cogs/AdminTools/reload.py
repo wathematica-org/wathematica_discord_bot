@@ -20,7 +20,9 @@ class Reload(commands.Cog):
     async def reload(
         self,
         ctx: discord.ApplicationContext,
-        cog_specifier: Option(input_type=str, description="リロードしたいCog名", required=True),  # type: ignore
+        cog_specifier: Option(
+            input_type=str, description="リロードしたいCog名", required=True
+        ),  # type: ignore
     ):
         # reload specified cog
         # cog_specifier will be like "Cogs.AdminTools.reload"

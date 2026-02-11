@@ -22,7 +22,9 @@ class Delete(commands.Cog):
     async def delete(
         self,
         ctx: discord.ApplicationContext,
-        seminar_name: Option(input_type=str, description="削除対象のゼミ名", required=True),  # type: ignore
+        seminar_name: Option(
+            input_type=str, description="削除対象のゼミ名", required=True
+        ),  # type: ignore
     ):
         # [ give additional information to type checker
         assert isinstance(seminar_name, str)

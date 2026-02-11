@@ -1,5 +1,4 @@
 import json
-import os
 from typing import TypedDict
 
 
@@ -8,6 +7,7 @@ from typing import TypedDict
 class ChannelInfo(TypedDict):
     id: int
     name: str
+
 
 # category_info: dict[str, ChannelInfo]
 # channel_info: dict[str, ChannelInfo]
@@ -29,9 +29,9 @@ def load_json(file_path: str) -> dict:
     server_info = data.get("server-info")
     guild_id = server_info.get("guild_id")
     engineer_role_id = server_info.get("engineer_role_id")
-    interesting_emoji_id = server_info.get("interesting_emoji_id",)
-    display_time_of_trivial_error = server_info.get(
-        "display_time_of_trivial_error", 30
+    interesting_emoji_id = server_info.get(
+        "interesting_emoji_id",
     )
+    display_time_of_trivial_error = server_info.get("display_time_of_trivial_error", 30)
     category_info = data.get("category-info")
     channel_info = data.get("channel-info")

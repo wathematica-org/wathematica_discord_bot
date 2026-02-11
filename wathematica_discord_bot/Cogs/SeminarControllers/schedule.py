@@ -18,8 +18,12 @@ class Schedule(commands.Cog):
     async def schedule(
         self,
         ctx: discord.ApplicationContext,
-        only_weekdays: Option(input_type=bool, description="平日のみ表示", required=False),  # type: ignore
-        only_late_hours: Option(input_type=bool, description="4限目以降のみ表示", required=False),  # type: ignore
+        only_weekdays: Option(
+            input_type=bool, description="平日のみ表示", required=False
+        ),  # type: ignore
+        only_late_hours: Option(
+            input_type=bool, description="4限目以降のみ表示", required=False
+        ),  # type: ignore
     ):
         await ctx.defer()
 

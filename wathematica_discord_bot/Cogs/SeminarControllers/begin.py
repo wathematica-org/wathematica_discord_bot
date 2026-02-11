@@ -47,23 +47,29 @@ class Begin(commands.Cog):
 
         # move the channel to the ongoing_seminar category
 
-        number_of_channels =await get_nuber_of_channel(ctx,config.category_info["ongoing_seminars"]["name"])
-        if number_of_channels< MAX_CHANNELS :
+        number_of_channels = await get_nuber_of_channel(
+            ctx, config.category_info["ongoing_seminars"]["name"]
+        )
+        if number_of_channels < MAX_CHANNELS:
             await ctx.channel.edit(
-            category=ongoing_seminar_category, reason=f"Requested by {ctx.author.name}"
+                category=ongoing_seminar_category,
+                reason=f"Requested by {ctx.author.name}",
             )
-        else :
-            ongoing_seminar_category = ctx.guild.get_channel(config.category_info["ongoing_seminars2"]["id"])
+        else:
+            ongoing_seminar_category = ctx.guild.get_channel(
+                config.category_info["ongoing_seminars2"]["id"]
+            )
             if not isinstance(ongoing_seminar_category, discord.CategoryChannel):
                 embed = discord.Embed(
-                        title="<:x:960095353577807883> システムエラー",
-                        description="管理者向けメッセージ: `ongoing_seminars2` カテゴリが見つかりませんでした。",
-                        color=discord.Colour.red(),
+                    title="<:x:960095353577807883> システムエラー",
+                    description="管理者向けメッセージ: `ongoing_seminars2` カテゴリが見つかりませんでした。",
+                    color=discord.Colour.red(),
                 )
                 await ctx.respond(embed=embed)
-                return 
+                return
             await ctx.channel.edit(
-                category=ongoing_seminar_category, reason=f"Requested by {ctx.author.name}"
+                category=ongoing_seminar_category,
+                reason=f"Requested by {ctx.author.name}",
             )
 
         async with async_session() as session:
@@ -92,6 +98,7 @@ class Begin(commands.Cog):
             color=discord.Colour.brand_green(),
         )
         await ctx.respond(embed=embed)
+
     @begin.error
     async def begin_error(
         self, ctx: discord.ApplicationContext, error: commands.CheckFailure
@@ -119,8 +126,10 @@ class Begin(commands.Cog):
 def setup(bot: discord.Bot):
     bot.add_cog(Begin(bot))
 
+
 MAX_CHANNELS = 50
 
-async def get_nuber_of_channel(ctx :discord.ApplicationContext , category_name : str):
-    category = discord.utils.get(ctx.guild.categories,name=category_name)
+
+async def get_nuber_of_channel(ctx: discord.ApplicationContext, category_name: str):
+    category = discord.utils.get(ctx.guild.categories, name=category_name)
     return len(category.channels)

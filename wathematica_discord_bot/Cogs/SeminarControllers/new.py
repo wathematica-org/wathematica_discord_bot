@@ -86,7 +86,7 @@ class New(commands.Cog):
                         color=discord.Colour.yellow(),
                     )
                     reply = await ctx.send(embed=embed)
-                    choices = ["\N{Squared OK}", "\N{Squared NG}"]
+                    choices = ["\N{SQUARED OK}", "\N{SQUARED NG}"]
                     for choice in choices:
                         await reply.add_reaction(choice)
                     # defer the final response. Without defer(), "The application did not respond" will show up to the user.
@@ -113,11 +113,11 @@ class New(commands.Cog):
                     else:
                         # delete the interaction message
                         await reply.delete()
-                        if reaction.emoji == "\N{Squared OK}":  # if the answer was :ok:
+                        if reaction.emoji == "\N{SQUARED OK}":  # if the answer was :ok:
                             # update seminar name and proceed
                             seminar_name = seminar_name_candidate
                         elif (
-                            reaction.emoji == "\N{Squared NG}"
+                            reaction.emoji == "\N{SQUARED NG}"
                         ):  # if the answer was :ng:
                             embed = discord.Embed(
                                 title="<:stop_button:1013296777027399700> 処理を中断します",

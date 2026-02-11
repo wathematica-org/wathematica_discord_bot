@@ -27,6 +27,7 @@ class WathematicaBot(discord.Bot):
         else:
             raise Exception("Failed to log in to Discord server.")
 
+
 # fEnable type hinting and IntelliSense for parsed arguments
 class Args(argparse.Namespace):
     config_file: str
@@ -57,7 +58,7 @@ if __name__ == "__main__":
             # Strip the tailing newline character with strip()
             token = discord_token_file.readline().strip()
         # Launch bot
-        print(f'{token=}')
+        print(f"{token=}")
         bot.run(token)
     else:
         token = os.environ.get("discord_token")
@@ -67,4 +68,3 @@ if __name__ == "__main__":
             )
         print("SUCCESS to get token by env.")
         bot.run(token)
-     

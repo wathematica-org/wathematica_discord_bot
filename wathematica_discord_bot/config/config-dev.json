@@ -1,39 +1,39 @@
 {
     "server-info": {
-        "guild_id": 1326841905702633484,
-        "engineer_role_id": 1326842136942870598,
-        "interesting_emoji_id": 1344930443052711966,
+        "guild_id": 1471364630617129042,
+        "engineer_role_id": 1471365926632034429,
+        "interesting_emoji_id": 1471372922735034536,
         "display_time_of_trivial_error": 30
     },
     "category-info": {
         "general": {
-            "id": 1344929498272890900,
+            "id": 1471372228171006043,
             "name": "全般"
         },
         "pending_seminars": {
-            "id": 1344916636733280298,
+            "id": 1471372287415550037,
             "name": "ゼミ(仮立て)"
         },
         "ongoing_seminars": {
-            "id": 1344916551559548999,
+            "id": 1471372443137474754,
             "name": "ゼミ(本運用)"
         },
         "ongoing_seminars2": {
-            "id": 1359087371651518504,
+            "id": 1471372958219112489,
             "name": "ゼミ(本運用2)"
         },
         "paused_seminars": {
-            "id": 1344928978007359511,
+            "id": 1471372371578323045,
             "name": "ゼミ(休止中)"
         },
         "finished_seminars": {
-            "id": 1344928854891958373,
+            "id": 1471372344206299216,
             "name": "ゼミ(終了)"
         }
     },
     "channel-info": {
         "role_settings": {
-            "id": 1344917795066085436,
+            "id": 1471372135623823474,
             "name": "権限設定"
         }
     }

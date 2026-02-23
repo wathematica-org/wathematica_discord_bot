@@ -8,7 +8,7 @@ from discord import Option
 from discord.commands import slash_command
 from discord.ext import commands
 from exceptions import InvalidCategoryException, InvalidChannelTypeException
-from model import Seminar
+from model import Seminar, Category
 from sqlalchemy import select
 from sqlalchemy.exc import NoResultFound
 
@@ -18,18 +18,18 @@ class ChangeLeader(commands.Cog):
         self.bot = bot
 
     @commands.guild_only()
-    @specific_categories_only(
-        category_ids=[
-            config.category_info["pending_seminars"]["id"],
-            config.category_info["ongoing_seminars"]["id"],
-            config.category_info["ongoing_seminars2"]["id"],
-        ]
-    )
+    # @specific_categories_only(
+    #     category_ids=[
+    #         config.category_info["pending_seminars"]["id"],
+    #         config.category_info["ongoing_seminars"]["id"],
+    #         config.category_info["ongoing_seminars2"]["id"],
+    #     ]
+    # )
     @textchannel_only()
     @slash_command(
         name="chleader",
         description="このゼミのゼミ長を変更します",
-        guild_ids=[config.guild_id],
+        # guild_ids=[config.guild_id],
     )
     async def chleader(
         self,
@@ -82,9 +82,9 @@ class ChangeLeader(commands.Cog):
                 try:
                     this_seminar: Seminar = (
                         await session.execute(
-                            select(Seminar).where(
+                            select(Seminar).join(Category).where(
                                 Seminar.channel_id == ctx.channel.id,
-                                Seminar.server_id == ctx.guild_id,
+                                Category.guild_id == ctx.guild_id,
                             )
                         )
                     ).scalar_one()
@@ -136,7 +136,7 @@ class ChangeLeader(commands.Cog):
         if isinstance(error, InvalidCategoryException):
             embed = discord.Embed(
                 title="<:x:960095353577807883> 不正な操作です",
-                description=f'{config.category_info["pending_seminars"]["name"]}または{config.category_info["ongoing_seminars"]["name"]}にあるテキストチャンネルでのみ実行可能です。',
+                description='《ゼミ(仮立て)》または《ゼミ(本運用)》にあるテキストチャンネルでのみ実行可能です。',
                 color=discord.Colour.red(),
             )
             await ctx.respond(

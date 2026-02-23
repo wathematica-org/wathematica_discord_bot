@@ -2,6 +2,7 @@ import datetime
 import enum
 from typing import Optional
 
+from sqlalchemy import ForeignKey
 from sqlalchemy.orm import DeclarativeBase, Mapped, MappedAsDataclass, mapped_column
 
 
@@ -18,18 +19,48 @@ class Base(DeclarativeBase, MappedAsDataclass):
     pass
 
 
-# Table definition
+# table definition
+# for guild
+class Guild(Base):
+    __tablename__ = "guild"
+
+    id: Mapped[int] = mapped_column(primary_key=True, init=False)
+    guild_id: Mapped[int] = mapped_column(unique=True)
+    name: Mapped[str]
+
+    interesting_emoji_id: Mapped[Optional[int]] = mapped_column(default=None)
+    role_setting_channel_id: Mapped[Optional[int]] = mapped_column(default=None)
+    system_channel_id: Mapped[Optional[int]] = mapped_column(default=None)
+    engineer_role_id: Mapped[Optional[int]] = mapped_column(default=None)
+
+
+# for category
+class Category(Base):
+    __tablename__ = "category"
+
+    id: Mapped[int] = mapped_column(primary_key=True, init=False)
+    category_id: Mapped[int] = mapped_column(unique=True)
+    name: Mapped[str]
+
+    guild_id: Mapped[int] = mapped_column(ForeignKey("guild.guild_id"))
+    state: Mapped[SeminarState]
+    category_type: Mapped[str] = mapped_column(default="regular")
+
+
+# for seminar
 class Seminar(Base):
     __tablename__ = "seminar"
 
     # id will be automatically assigned by the database, so it should not be initialized in the constructor
     id: Mapped[int] = mapped_column(primary_key=True, init=False)
-    server_id: Mapped[int]
+
+    category_id: Mapped[int] = mapped_column(ForeignKey("category.category_id"))
+
     name: Mapped[str]
     created_at: Mapped[datetime.datetime]
     finished_at: Mapped[Optional[datetime.datetime]]
-    seminar_state: Mapped[SeminarState]
     leader_id: Mapped[int]
+
     channel_id: Mapped[int] = mapped_column(unique=True)
     role_id: Mapped[int] = mapped_column(unique=True)
     role_setting_message_id: Mapped[int] = mapped_column(unique=True)

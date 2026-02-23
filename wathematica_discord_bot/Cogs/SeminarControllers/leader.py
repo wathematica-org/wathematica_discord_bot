@@ -5,7 +5,7 @@ from database import async_session
 from discord.commands import slash_command
 from discord.ext import commands
 from exceptions import InvalidCategoryException, InvalidChannelTypeException
-from model import Seminar
+from model import Seminar, Category
 from sqlalchemy import select
 from sqlalchemy.exc import NoResultFound
 
@@ -15,19 +15,19 @@ class Leader(commands.Cog):
         self.bot = bot
 
     @commands.guild_only()
-    @specific_categories_only(
-        category_ids=[
-            config.category_info["pending_seminars"]["id"],
-            config.category_info["paused_seminars"]["id"],
-            config.category_info["ongoing_seminars"]["id"],
-            config.category_info["ongoing_seminars2"]["id"],
-        ]
-    )
+    # @specific_categories_only(
+    #     category_ids=[
+    #         config.category_info["pending_seminars"]["id"],
+    #         config.category_info["paused_seminars"]["id"],
+    #         config.category_info["ongoing_seminars"]["id"],
+    #         config.category_info["ongoing_seminars2"]["id"],
+    #     ]
+    # )
     @textchannel_only()
     @slash_command(
         name="leader",
         description="このゼミのゼミ長を表示します",
-        guild_ids=[config.guild_id],
+        # guild_ids=[config.guild_id],
     )
     async def leader(self, ctx: discord.ApplicationContext):
         # [ give additional information to type checker
@@ -44,9 +44,9 @@ class Leader(commands.Cog):
                 try:
                     this_seminar: Seminar = (
                         await session.execute(
-                            select(Seminar).where(
+                            select(Seminar).join(Category).where(
                                 Seminar.channel_id == ctx.channel.id,
-                                Seminar.server_id == ctx.guild_id,
+                                Category.guild_id == ctx.guild_id,
                             )
                         )
                     ).scalar_one()
@@ -92,7 +92,7 @@ class Leader(commands.Cog):
         if isinstance(error, InvalidCategoryException):
             embed = discord.Embed(
                 title="<:x:960095353577807883> 不正な操作です",
-                description=f'{config.category_info["pending_seminars"]["name"]}または{config.category_info["ongoing_seminars"]["name"]},{config.category_info["ongoing_seminars2"]["name"]}にあるテキストチャンネルでのみ実行可能です。',
+                description='《ゼミ(仮立て)》または《ゼミ(本運用)》にあるテキストチャンネルでのみ実行可能です。',
                 color=discord.Colour.red(),
             )
             await ctx.respond(

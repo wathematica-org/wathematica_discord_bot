@@ -1,12 +1,12 @@
 import datetime
 
-import config
 import discord
 from database import async_session
 from discord import Option
 from discord.commands import slash_command
 from discord.ext import commands
-from model import Seminar, SeminarState
+from model import Seminar, SeminarState, Category, Guild
+import utils
 from sqlalchemy import select
 from sqlalchemy.exc import NoResultFound
 
@@ -19,7 +19,7 @@ class New(commands.Cog):
     @slash_command(
         name="new",
         description="seminar_name が付与されたテキストチャンネルとロールを作成します。",
-        guild_ids=[config.guild_id],
+        # guild_ids=[config.guild_id],
     )
     async def new(
         self,
@@ -31,6 +31,15 @@ class New(commands.Cog):
         # guild_only() decorator ensures that ctx.guild is not None
         assert isinstance(ctx.guild, discord.Guild)
         # ]
+
+        async with async_session() as session:
+            guild_record = (
+                await session.execute(
+                    select(Guild).where(
+                        Guild.guild_id == ctx.guild_id
+                    )
+                )
+            ).scalar_one_or_none()
 
         # TODO: sanitize user's incorrect input patterns (e.g. some users may attach redundant quotation marks around the seminar name)
         seminar_name = seminar_name.lower()  # discord channel names should be lowercase
@@ -51,10 +60,12 @@ class New(commands.Cog):
                 try:
                     (
                         await session.execute(
-                            select(Seminar).where(
+                            select(Seminar)
+                            .join(Category)
+                            .where(
                                 Seminar.name == seminar_name,
-                                Seminar.seminar_state != SeminarState.FINISHED,
-                                Seminar.server_id == ctx.guild_id,
+                                Category.state != SeminarState.FINISHED,
+                                Category.guild_id == ctx.guild_id,
                             )
                         )
                     ).scalar_one()
@@ -68,10 +79,12 @@ class New(commands.Cog):
                         try:
                             (
                                 await session.execute(
-                                    select(Seminar).where(
+                                    select(Seminar)
+                                    .join(Category)
+                                    .where(
                                         Seminar.name == seminar_name_candidate,
-                                        Seminar.seminar_state != SeminarState.FINISHED,
-                                        Seminar.server_id == ctx.guild_id,
+                                        Category.state != SeminarState.FINISHED,
+                                        Category.guild_id == ctx.guild_id,
                                     )
                                 )
                             ).scalar_one()
@@ -127,18 +140,19 @@ class New(commands.Cog):
                             await ctx.respond(embed=embed)
                             return
 
-        category = ctx.guild.get_channel(config.category_info["pending_seminars"]["id"])
-        if not isinstance(category, discord.CategoryChannel):
-            embed = discord.Embed(
-                title="<:x:960095353577807883> システムエラー",
-                description="管理者向けメッセージ: `pending_seminars` カテゴリが見つかりませんでした。",
-                color=discord.Colour.red(),
-            )
-            await ctx.respond(embed=embed)
-            return
+        # category = ctx.guild.get_channel(config.category_info["pending_seminars"]["id"])
+        # if not isinstance(category, discord.CategoryChannel):
+        #     embed = discord.Embed(
+        #         title="<:x:960095353577807883> システムエラー",
+        #         description="管理者向けメッセージ: `pending_seminars` カテゴリが見つかりませんでした。",
+        #         color=discord.Colour.red(),
+        #     )
+        #     await ctx.respond(embed=embed)
+        #     return
 
+        pending_category = await utils.get_category(ctx, SeminarState.PENDING)
         # create a text channel and a role
-        new_text_channel = await category.create_text_channel(name=seminar_name)
+        new_text_channel = await pending_category.create_text_channel(name=seminar_name)
         embed = discord.Embed(
             title="<:white_check_mark:960095096563466250> チャンネル作成成功",
             description=f"チャンネル `{seminar_name}` を作成しました。",
@@ -155,8 +169,11 @@ class New(commands.Cog):
         await ctx.respond(embed=embed)
 
         # Send message to role_settings channel in order for users to attach the role to themselves
+        # role_setting_channel = ctx.guild.get_channel(
+        #     config.channel_info["role_settings"]["id"]
+        # )
         role_setting_channel = ctx.guild.get_channel(
-            config.channel_info["role_settings"]["id"]
+            guild_record.role_setting_channel_id
         )
         if not isinstance(role_setting_channel, discord.TextChannel):
             embed = discord.Embed(
@@ -174,7 +191,8 @@ class New(commands.Cog):
         message_to_role_settings_channel: discord.Message = (
             await role_setting_channel.send(embed=embed_to_role_settings_channel)
         )
-        interesting_emoji = await ctx.guild.fetch_emoji(config.interesting_emoji_id)
+        # interesting_emoji = await ctx.guild.fetch_emoji(config.interesting_emoji_id)
+        interesting_emoji = await ctx.guild.fetch_emoji(guild_record.interesting_emoji_id)
         await message_to_role_settings_channel.add_reaction(interesting_emoji)
 
         # Prompt users to get the role at role_settings channel
@@ -194,11 +212,10 @@ class New(commands.Cog):
 
         # add this seminar to the database
         seminar = Seminar(
-            server_id=ctx.guild.id,
+            category_id=pending_category.id,
             name=seminar_name,
             created_at=datetime.datetime.now(),
             finished_at=None,
-            seminar_state=SeminarState.PENDING,
             leader_id=ctx.author.id,
             channel_id=new_text_channel.id,
             role_id=new_role.id,

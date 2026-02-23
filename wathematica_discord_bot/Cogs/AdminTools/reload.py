@@ -12,11 +12,11 @@ class Reload(commands.Cog):
     @slash_command(
         name="reload",
         description="[技術部専用] 指定されたCogをリロードします",
-        guild_ids=[config.guild_id],
+        # guild_ids=[config.guild_id],
     )
     # see https://docs.pycord.dev/en/master/ext/commands/api.html#checks to
     # know how to use 'checker' decorators like 'has_role'
-    @commands.has_role(config.engineer_role_id)
+    # @commands.has_role(config.engineer_role_id)
     async def reload(
         self,
         ctx: discord.ApplicationContext,

@@ -7,3 +7,11 @@ class InvalidCategoryException(discord.CheckFailure):
 
 class InvalidChannelTypeException(discord.CheckFailure):
     pass
+
+
+class ConfigurationNotCompleteException(discord.CheckFailure):
+    pass
+
+
+class SystemChannelOnlyException(discord.CheckFailure):
+    pass

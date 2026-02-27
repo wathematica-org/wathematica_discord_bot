@@ -52,8 +52,8 @@ def specific_states_only(states: list[SeminarState]):
         
         if not category_record:
             # サーバー設定をする必要がある，という ERROR 
-            raise Exception(
-                "There is no server settings."
+            raise InvalidCategoryException(
+                "Command was executed in a category that is not registered in the datebase"
             )
 
         if category_record.state in states:

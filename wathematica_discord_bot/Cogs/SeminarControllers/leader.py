@@ -1,11 +1,11 @@
 import config
 import discord
-from checks import specific_categories_only, textchannel_only
+from checks import specific_states_only, textchannel_only
 from database import async_session
 from discord.commands import slash_command
 from discord.ext import commands
 from exceptions import InvalidCategoryException, InvalidChannelTypeException
-from model import Seminar, Category
+from model import Seminar, SeminarState,Category
 from sqlalchemy import select
 from sqlalchemy.exc import NoResultFound
 
@@ -23,6 +23,7 @@ class Leader(commands.Cog):
     #         config.category_info["ongoing_seminars2"]["id"],
     #     ]
     # )
+    @specific_states_only(states=[SeminarState.PENDING, SeminarState.ONGOING, SeminarState.PAUSED])
     @textchannel_only()
     @slash_command(
         name="leader",

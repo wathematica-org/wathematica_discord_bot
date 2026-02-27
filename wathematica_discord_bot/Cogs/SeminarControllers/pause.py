@@ -1,6 +1,6 @@
 import config
 import discord
-from checks import specific_categories_only, textchannel_only
+from checks import specific_states_only, textchannel_only
 from database import async_session
 from discord.commands import slash_command
 from discord.ext import commands
@@ -22,6 +22,7 @@ class Pause(commands.Cog):
     #         config.category_info["ongoing_seminars2"]["id"],
     #     ]
     # )
+    @specific_states_only(states=[SeminarState.ONGOING])
     @textchannel_only()
     @slash_command(
         name="pause",

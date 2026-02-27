@@ -15,3 +15,7 @@ class ConfigurationNotCompleteException(discord.CheckFailure):
 
 class SystemChannelOnlyException(discord.CheckFailure):
     pass
+
+
+class HasEngineerRoleException(discord.CheckFailure):
+    pass

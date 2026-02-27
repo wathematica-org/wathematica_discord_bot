@@ -1,4 +1,3 @@
-import config
 import discord
 from checks import specific_states_only, textchannel_only, registered_server_only
 from database import async_session
@@ -22,7 +21,6 @@ class Pause(commands.Cog):
     @slash_command(
         name="pause",
         description='ゼミを《ゼミ(本運用)》から《ゼミ(休止中)》に移動させます',
-        # guild_ids=[config.guild_id],
     )
     async def pause(self, ctx: discord.ApplicationContext):
         # [ give additional information to type checker
@@ -30,9 +28,6 @@ class Pause(commands.Cog):
         assert isinstance(ctx.guild, discord.Guild)
         # ]
 
-        # paused_seminar_category = ctx.guild.get_channel(
-        #     config.category_info["paused_seminars"]["id"]
-        # )
         paused_seminar_category = await utils.get_category(ctx, SeminarState.PAUSED)
         if not isinstance(paused_seminar_category, discord.CategoryChannel):
             embed = discord.Embed(

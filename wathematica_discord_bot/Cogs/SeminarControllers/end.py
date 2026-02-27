@@ -23,7 +23,6 @@ class End(commands.Cog):
     @slash_command(
         name="end",
         description='終了したゼミを《ゼミ(終了)》へ移動させ、ロールを削除します。',
-        # guild_ids=[config.guild_id],
     )
     async def end(self, ctx: discord.ApplicationContext):
         # [ give additional information to type checker
@@ -218,7 +217,7 @@ class End(commands.Cog):
         if isinstance(error, InvalidCategoryException):
             embed = discord.Embed(
                 title="<:x:960095353577807883> 不正な操作です",
-                description=f'ゼミ(仮立て) または ゼミ(本運用) にあるテキストチャンネルでのみ実行可能です。',
+                description='《ゼミ(仮立て)》または《ゼミ(本運用)》にあるテキストチャンネルでのみ実行可能です。',
                 color=discord.Colour.red(),
             )
             await ctx.respond(embed=embed)

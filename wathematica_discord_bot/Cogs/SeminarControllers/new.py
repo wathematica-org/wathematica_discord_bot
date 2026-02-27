@@ -22,7 +22,6 @@ class New(commands.Cog):
     @slash_command(
         name="new",
         description="seminar_name が付与されたテキストチャンネルとロールを作成します。",
-        # guild_ids=[config.guild_id],
     )
     async def new(
         self,
@@ -143,16 +142,6 @@ class New(commands.Cog):
                             await ctx.respond(embed=embed)
                             return
 
-        # category = ctx.guild.get_channel(config.category_info["pending_seminars"]["id"])
-        # if not isinstance(category, discord.CategoryChannel):
-        #     embed = discord.Embed(
-        #         title="<:x:960095353577807883> システムエラー",
-        #         description="管理者向けメッセージ: `pending_seminars` カテゴリが見つかりませんでした。",
-        #         color=discord.Colour.red(),
-        #     )
-        #     await ctx.respond(embed=embed)
-        #     return
-
         pending_category = await utils.get_category(ctx, SeminarState.PENDING)
         # create a text channel and a role
         new_text_channel = await pending_category.create_text_channel(name=seminar_name)
@@ -172,9 +161,6 @@ class New(commands.Cog):
         await ctx.respond(embed=embed)
 
         # Send message to role_settings channel in order for users to attach the role to themselves
-        # role_setting_channel = ctx.guild.get_channel(
-        #     config.channel_info["role_settings"]["id"]
-        # )
         role_setting_channel = ctx.guild.get_channel(
             guild_record.role_setting_channel_id
         )
@@ -194,7 +180,6 @@ class New(commands.Cog):
         message_to_role_settings_channel: discord.Message = (
             await role_setting_channel.send(embed=embed_to_role_settings_channel)
         )
-        # interesting_emoji = await ctx.guild.fetch_emoji(config.interesting_emoji_id)
         interesting_emoji = await ctx.guild.fetch_emoji(guild_record.interesting_emoji_id)
         await message_to_role_settings_channel.add_reaction(interesting_emoji)
 
@@ -240,6 +225,7 @@ class New(commands.Cog):
             )
             await ctx.respond(embed=embed)
             return
+        print(f'{type(error)=}')
         raise Exception("Unexpected error occurred.")
 
 

@@ -9,7 +9,11 @@ class Settings(commands.Cog):
     def __init__(self, bot: discord.Bot):
         self.bot = bot
 
-    @slash_command(name="setting", description="サーバー設定ダッシュボードを開きます")
+    @slash_command(
+        name="setting", 
+        description="サーバー設定ダッシュボードを開きます",
+        default_member_permissions=discord.Permissions(administrator=True),
+    )
     async def guild_setting(self, ctx: discord.ApplicationContext):
         await ctx.defer()
 

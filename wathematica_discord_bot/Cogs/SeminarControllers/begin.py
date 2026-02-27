@@ -1,4 +1,3 @@
-import config
 import utils
 import discord
 from checks import specific_states_only, textchannel_only, registered_server_only
@@ -26,8 +25,7 @@ class Begin(commands.Cog):
     @textchannel_only()
     @slash_command(
         name="begin",
-        description=f'ゼミをゼミ(本運用)に移動させます',
-        # guild_ids=[config.guild_id],
+        description='ゼミを《ゼミ(本運用)》に移動させます',
     )
     async def begin(self, ctx: discord.ApplicationContext):
         # [ give additional information to type checker

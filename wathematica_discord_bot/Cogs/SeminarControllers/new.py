@@ -9,6 +9,8 @@ from model import Seminar, SeminarState, Category, Guild
 import utils
 from sqlalchemy import select
 from sqlalchemy.exc import NoResultFound
+from exceptions import ConfigurationNotCompleteException
+from checks import registered_server_only
 
 
 class New(commands.Cog):
@@ -16,6 +18,7 @@ class New(commands.Cog):
         self.bot = bot
 
     @commands.guild_only()
+    @registered_server_only()
     @slash_command(
         name="new",
         description="seminar_name が付与されたテキストチャンネルとロールを作成します。",
@@ -224,6 +227,20 @@ class New(commands.Cog):
         async with async_session() as session:
             async with session.begin():
                 session.add(seminar)
+    
+    @new.error
+    async def new_error(
+        self, ctx: discord.ApplicationContext, error: commands.CheckFailure
+    ):
+        if isinstance(error, ConfigurationNotCompleteException):
+            embed = discord.Embed(
+                title="<:x:960095353577807883> サーバー設定ができていません",
+                description="管理者に `/setting` で設定を依頼してください。",
+                color=discord.Colour.red(),
+            )
+            await ctx.respond(embed=embed)
+            return
+        raise Exception("Unexpected error occurred.")
 
 
 def setup(bot: discord.Bot):

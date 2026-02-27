@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
-from exceptions import InvalidCategoryException, InvalidChannelTypeException
-from model import SeminarState, Category
+from exceptions import InvalidCategoryException, InvalidChannelTypeException, ConfigurationNotCompleteException
+from model import SeminarState, Category, Guild
 from database import async_session
 from sqlalchemy import select
 
@@ -85,4 +85,40 @@ def textchannel_only():
                 "Command was executed in an invalid channel"
             )
 
+    return commands.check(predicate)
+
+
+def registered_server_only():
+    """
+    Returns:
+        _ : bool
+            whether the settings was completed
+    Raises:
+        ConfigurationNotCompleteException
+            raised when the settings of the server was not completed.
+    """
+
+    async def predicate(ctx: discord.ApplicationContext) -> bool:
+        async with async_session() as session:
+            guild_record = (
+                await session.execute(
+                    select(Guild).where(
+                        Guild.guild_id == ctx.guild_id
+                    )
+                )
+            ).scalar_one_or_none()
+        if not guild_record:
+            raise ConfigurationNotCompleteException(
+                "Server setting was not completed"
+            )
+        
+        if not all([
+            guild_record.interesting_emoji_id,
+            guild_record.engineer_role_id,
+            guild_record.role_setting_channel_id,
+            guild_record.system_channel_id,
+        ]):
+            raise ConfigurationNotCompleteException(
+                "Server setting was not completed"
+            )
     return commands.check(predicate)

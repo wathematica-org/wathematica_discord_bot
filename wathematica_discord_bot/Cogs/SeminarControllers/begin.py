@@ -1,11 +1,11 @@
 import config
 import utils
 import discord
-from checks import specific_states_only, textchannel_only
+from checks import specific_states_only, textchannel_only, registered_server_only
 from database import async_session
 from discord.commands import slash_command
 from discord.ext import commands
-from exceptions import InvalidCategoryException, InvalidChannelTypeException
+from exceptions import InvalidCategoryException, InvalidChannelTypeException, ConfigurationNotCompleteException
 from model import Seminar, SeminarState, Category, Guild
 from sqlalchemy import select
 from sqlalchemy.exc import NoResultFound
@@ -16,6 +16,7 @@ class Begin(commands.Cog):
         self.bot = bot
 
     @commands.guild_only()
+    @registered_server_only()
     @specific_states_only(
         states=[
             SeminarState.PENDING,
@@ -121,6 +122,14 @@ class Begin(commands.Cog):
     async def begin_error(
         self, ctx: discord.ApplicationContext, error: commands.CheckFailure
     ):
+        if isinstance(error, ConfigurationNotCompleteException):
+            embed = discord.Embed(
+                title="<:x:960095353577807883> サーバー設定ができていません",
+                description="管理者に `/setting` で設定を依頼してください。",
+                color=discord.Colour.red(),
+            )
+            await ctx.respond(embed=embed)
+            return
         if isinstance(error, InvalidChannelTypeException):
             embed = discord.Embed(
                 title="<:x:960095353577807883> 不正な操作です",

@@ -2,12 +2,12 @@ import textwrap
 
 import config
 import discord
-from checks import specific_states_only, textchannel_only
+from checks import specific_states_only, textchannel_only, registered_server_only
 from database import async_session
 from discord import Option
 from discord.commands import slash_command
 from discord.ext import commands
-from exceptions import InvalidCategoryException, InvalidChannelTypeException
+from exceptions import InvalidCategoryException, InvalidChannelTypeException, ConfigurationNotCompleteException
 from model import Seminar, SeminarState,Category
 from sqlalchemy import select
 from sqlalchemy.exc import NoResultFound
@@ -18,13 +18,7 @@ class ChangeLeader(commands.Cog):
         self.bot = bot
 
     @commands.guild_only()
-    # @specific_categories_only(
-    #     category_ids=[
-    #         config.category_info["pending_seminars"]["id"],
-    #         config.category_info["ongoing_seminars"]["id"],
-    #         config.category_info["ongoing_seminars2"]["id"],
-    #     ]
-    # )
+    @registered_server_only()
     @specific_states_only(states=[SeminarState.PENDING, SeminarState.ONGOING, SeminarState.PAUSED])
     @textchannel_only()
     @slash_command(
@@ -126,6 +120,14 @@ class ChangeLeader(commands.Cog):
     async def chleader_error(
         self, ctx: discord.ApplicationContext, error: commands.CheckFailure
     ):
+        if isinstance(error, ConfigurationNotCompleteException):
+            embed = discord.Embed(
+                title="<:x:960095353577807883> サーバー設定ができていません",
+                description="管理者に `/setting` で設定を依頼してください。",
+                color=discord.Colour.red(),
+            )
+            await ctx.respond(embed=embed)
+            return
         if isinstance(error, InvalidChannelTypeException):
             embed = discord.Embed(
                 title="<:x:960095353577807883> 不正な操作です",

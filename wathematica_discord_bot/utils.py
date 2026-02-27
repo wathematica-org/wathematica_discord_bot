@@ -3,6 +3,8 @@ from database import async_session
 from sqlalchemy import select
 from model import SeminarState, Category
 
+
+
 state2name = {
     SeminarState.PENDING:   "仮立て",
     SeminarState.ONGOING:   "本運用",

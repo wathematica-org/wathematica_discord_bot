@@ -32,7 +32,7 @@ Pythonによって実装されています。
 初回（machine 作成時）にはデータベース用の volume を確保するために以下のような手順で行う：
 
 1. `fly launch --ha=halse --secret discord_token={DISCORD_TOKEN} --no-deploy` を実行して app を作成
-2. `fly volumes create data_volume --region iad --size` によって作成した app に紐づく volume を確保
+2. `fly volumes create data_volume --region iad --size 1 -a wathematica-discord-bot` によって作成した app に紐づく volume を確保
 3. `fly deploy` を実行してデプロイ
 
 ### データの移行

@@ -4,8 +4,12 @@ from checks import specific_states_only, textchannel_only, registered_server_onl
 from database import async_session
 from discord.commands import slash_command
 from discord.ext import commands
-from exceptions import InvalidCategoryException, InvalidChannelTypeException, ConfigurationNotCompleteException
-from model import Seminar, SeminarState, Category, Guild
+from exceptions import (
+    InvalidCategoryException,
+    InvalidChannelTypeException,
+    ConfigurationNotCompleteException,
+)
+from model import Seminar, SeminarState, Category
 from sqlalchemy import select
 from sqlalchemy.exc import NoResultFound
 
@@ -25,7 +29,7 @@ class Begin(commands.Cog):
     @textchannel_only()
     @slash_command(
         name="begin",
-        description='ゼミを《ゼミ(本運用)》に移動させます',
+        description="ゼミを《ゼミ(本運用)》に移動させます",
     )
     async def begin(self, ctx: discord.ApplicationContext):
         # [ give additional information to type checker
@@ -33,19 +37,6 @@ class Begin(commands.Cog):
         assert isinstance(ctx.guild, discord.Guild)
         # ]
 
-        async with async_session() as session:
-            guild_record = (
-                await session.execute(
-                    select(Guild).where(
-                        Guild.guild_id == ctx.guild_id
-                    )
-                )
-            ).scalar_one_or_none()
-
-        # ongoing_seminar_category = ctx.guild.get_channel(
-        #     config.category_info["ongoing_seminars"]["id"]
-        # )
-        # 
         ongoing_seminar_category = await utils.get_category(ctx, SeminarState.ONGOING)
         if not isinstance(ongoing_seminar_category, discord.CategoryChannel):
             embed = discord.Embed(
@@ -55,7 +46,6 @@ class Begin(commands.Cog):
             )
             await ctx.respond(embed=embed)
             return
-        
 
         # move the channel to the ongoing_seminar category
         await ctx.channel.edit(
@@ -93,7 +83,9 @@ class Begin(commands.Cog):
                 try:
                     this_seminar: Seminar = (
                         await session.execute(
-                            select(Seminar).join(Category).where(
+                            select(Seminar)
+                            .join(Category)
+                            .where(
                                 Seminar.channel_id == ctx.channel.id,
                                 Category.guild_id == ctx.guild_id,
                             )
@@ -111,7 +103,7 @@ class Begin(commands.Cog):
 
         embed = discord.Embed(
             title="<:white_check_mark:960095096563466250> チャンネル移動成功",
-            description=f'チャンネルを《{ongoing_seminar_category.name}》へ移動しました。',
+            description=f"チャンネルを《{ongoing_seminar_category.name}》へ移動しました。",
             color=discord.Colour.brand_green(),
         )
         await ctx.respond(embed=embed)
@@ -139,7 +131,7 @@ class Begin(commands.Cog):
         if isinstance(error, InvalidCategoryException):
             embed = discord.Embed(
                 title="<:x:960095353577807883> 不正な操作です",
-                description='《ゼミ(仮立て)》にあるテキストチャンネルでのみ実行可能です。',
+                description="《ゼミ(仮立て)》にあるテキストチャンネルでのみ実行可能です。",
                 color=discord.Colour.red(),
             )
             await ctx.respond(embed=embed)

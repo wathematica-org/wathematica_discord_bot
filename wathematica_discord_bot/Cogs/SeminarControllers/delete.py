@@ -40,9 +40,7 @@ class Delete(commands.Cog):
         async with async_session() as session:
             guild_record = (
                 await session.execute(
-                    select(Guild).where(
-                        Guild.guild_id == ctx.guild_id
-                    )
+                    select(Guild).where(Guild.guild_id == ctx.guild_id)
                 )
             ).scalar_one_or_none()
 
@@ -53,7 +51,9 @@ class Delete(commands.Cog):
                 try:
                     this_seminar: Seminar = (
                         await session.execute(
-                            select(Seminar).join(Category).where(
+                            select(Seminar)
+                            .join(Category)
+                            .where(
                                 Seminar.name == seminar_name,
                                 Category.guild_id == ctx.guild_id,
                             )

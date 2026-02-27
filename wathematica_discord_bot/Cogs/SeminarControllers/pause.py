@@ -3,7 +3,11 @@ from checks import specific_states_only, textchannel_only, registered_server_onl
 from database import async_session
 from discord.commands import slash_command
 from discord.ext import commands
-from exceptions import InvalidCategoryException, InvalidChannelTypeException, ConfigurationNotCompleteException
+from exceptions import (
+    InvalidCategoryException,
+    InvalidChannelTypeException,
+    ConfigurationNotCompleteException,
+)
 from model import Seminar, SeminarState, Category
 from sqlalchemy import select
 from sqlalchemy.exc import NoResultFound
@@ -20,7 +24,7 @@ class Pause(commands.Cog):
     @textchannel_only()
     @slash_command(
         name="pause",
-        description='ゼミを《ゼミ(本運用)》から《ゼミ(休止中)》に移動させます',
+        description="ゼミを《ゼミ(本運用)》から《ゼミ(休止中)》に移動させます",
     )
     async def pause(self, ctx: discord.ApplicationContext):
         # [ give additional information to type checker
@@ -48,7 +52,9 @@ class Pause(commands.Cog):
                 try:
                     this_seminar: Seminar = (
                         await session.execute(
-                            select(Seminar).join(Category).where(
+                            select(Seminar)
+                            .join(Category)
+                            .where(
                                 Seminar.channel_id == ctx.channel.id,
                                 Category.guild_id == ctx.guild_id,
                             )
@@ -65,7 +71,7 @@ class Pause(commands.Cog):
 
         embed = discord.Embed(
             title="<:white_check_mark:960095096563466250> チャンネル移動成功",
-            description=f'チャンネルを《{paused_seminar_category.name}》へ移動しました。',
+            description=f"チャンネルを《{paused_seminar_category.name}》へ移動しました。",
             color=discord.Colour.brand_green(),
         )
         await ctx.respond(embed=embed)
@@ -93,7 +99,7 @@ class Pause(commands.Cog):
         if isinstance(error, InvalidCategoryException):
             embed = discord.Embed(
                 title="<:x:960095353577807883> 不正な操作です",
-                description='《ゼミ(本運用)》にあるテキストチャンネルでのみ実行可能です。',
+                description="《ゼミ(本運用)》にあるテキストチャンネルでのみ実行可能です。",
                 color=discord.Colour.red(),
             )
             await ctx.respond(embed=embed)

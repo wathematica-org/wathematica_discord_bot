@@ -1,6 +1,11 @@
 import discord
 from discord.ext import commands
-from exceptions import InvalidCategoryException, InvalidChannelTypeException, ConfigurationNotCompleteException, HasEngineerRoleException
+from exceptions import (
+    InvalidCategoryException,
+    InvalidChannelTypeException,
+    ConfigurationNotCompleteException,
+    HasEngineerRoleException,
+)
 from model import SeminarState, Category, Guild
 from database import async_session
 from sqlalchemy import select
@@ -29,6 +34,7 @@ def specific_categories_only(category_ids: list[int]):
 
     return commands.check(predicate)
 
+
 def specific_states_only(states: list[SeminarState]):
     """
     Parameters:
@@ -51,7 +57,7 @@ def specific_states_only(states: list[SeminarState]):
                     )
                 )
             ).scalar_one_or_none()
-        
+
         if not category_record:
             raise InvalidCategoryException(
                 "Command was executed in a category that is not registered in the datebase"
@@ -102,27 +108,24 @@ def registered_server_only():
         async with async_session() as session:
             guild_record = (
                 await session.execute(
-                    select(Guild).where(
-                        Guild.guild_id == ctx.guild_id
-                    )
+                    select(Guild).where(Guild.guild_id == ctx.guild_id)
                 )
             ).scalar_one_or_none()
         if not guild_record:
-            raise ConfigurationNotCompleteException(
-                "Server setting was not completed"
-            )
+            raise ConfigurationNotCompleteException("Server setting was not completed")
 
-        if all([
-            guild_record.interesting_emoji_id,
-            guild_record.engineer_role_id,
-            guild_record.role_setting_channel_id,
-            guild_record.system_channel_id,
-        ]):
+        if all(
+            [
+                guild_record.interesting_emoji_id,
+                guild_record.engineer_role_id,
+                guild_record.role_setting_channel_id,
+                guild_record.system_channel_id,
+            ]
+        ):
             return True
         else:
-            raise ConfigurationNotCompleteException(
-                "Server setting was not completed"
-            )
+            raise ConfigurationNotCompleteException("Server setting was not completed")
+
     return commands.check(predicate)
 
 
@@ -131,21 +134,16 @@ def has_engineer_role_only():
         async with async_session() as session:
             guild_record = (
                 await session.execute(
-                    select(Guild).where(
-                        Guild.guild_id == ctx.guild_id
-                    )
+                    select(Guild).where(Guild.guild_id == ctx.guild_id)
                 )
             ).scalar_one_or_none()
 
         if not guild_record:
-            raise ConfigurationNotCompleteException(
-                "Server setting was not completed"
-            )
+            raise ConfigurationNotCompleteException("Server setting was not completed")
 
         if guild_record.engineer_role_id in ctx.author.roles:
             return True
         else:
-            raise HasEngineerRoleException(
-                "Command was used by non engineer role user"
-            )
+            raise HasEngineerRoleException("Command was used by non engineer role user")
+
     return commands.check(predicate)

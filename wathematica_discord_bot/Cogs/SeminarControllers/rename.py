@@ -4,7 +4,11 @@ from database import async_session
 from discord import NotFound, Option
 from discord.commands import slash_command
 from discord.ext import commands
-from exceptions import InvalidCategoryException, InvalidChannelTypeException, ConfigurationNotCompleteException
+from exceptions import (
+    InvalidCategoryException,
+    InvalidChannelTypeException,
+    ConfigurationNotCompleteException,
+)
 from model import Seminar, SeminarState, Category, Guild
 from sqlalchemy import select
 from sqlalchemy.exc import NoResultFound
@@ -16,7 +20,9 @@ class Rename(commands.Cog):
 
     @commands.guild_only()
     @registered_server_only()
-    @specific_states_only(states=[SeminarState.PENDING, SeminarState.ONGOING, SeminarState.PAUSED])
+    @specific_states_only(
+        states=[SeminarState.PENDING, SeminarState.ONGOING, SeminarState.PAUSED]
+    )
     @textchannel_only()
     @slash_command(
         name="rename",
@@ -51,7 +57,9 @@ class Rename(commands.Cog):
                 try:
                     (
                         await session.execute(
-                            select(Seminar).join(Category).where(
+                            select(Seminar)
+                            .join(Category)
+                            .where(
                                 Seminar.name == new_name,
                                 Category.state != SeminarState.FINISHED,
                                 Category.guild_id == ctx.guild_id,
@@ -74,7 +82,9 @@ class Rename(commands.Cog):
                 try:
                     this_seminar: Seminar = (
                         await session.execute(
-                            select(Seminar).join(Category).where(
+                            select(Seminar)
+                            .join(Category)
+                            .where(
                                 Seminar.channel_id == ctx.channel.id,
                                 Category.guild_id == ctx.guild_id,
                             )
@@ -133,14 +143,10 @@ class Rename(commands.Cog):
         async with async_session() as session:
             guild_record = (
                 await session.execute(
-                    select(Guild).where(
-                        Guild.guild_id == ctx.guild_id
-                    )
+                    select(Guild).where(Guild.guild_id == ctx.guild_id)
                 )
             ).scalar_one_or_none()
-        role_channel = ctx.guild.get_channel(
-            guild_record.role_setting_channel_id
-        )
+        role_channel = ctx.guild.get_channel(guild_record.role_setting_channel_id)
         if not isinstance(role_channel, discord.TextChannel):
             embed = discord.Embed(
                 title="<:x:960095353577807883> システムエラー",
@@ -197,7 +203,7 @@ class Rename(commands.Cog):
         if isinstance(error, InvalidCategoryException):
             embed = discord.Embed(
                 title="<:x:960095353577807883> 不正な操作です",
-                description='《ゼミ(仮立て)》または《ゼミ(本運用)》にあるテキストチャンネルでのみ実行可能です。',
+                description="《ゼミ(仮立て)》または《ゼミ(本運用)》にあるテキストチャンネルでのみ実行可能です。",
                 color=discord.Colour.red(),
             )
             await ctx.respond(embed=embed)

@@ -37,9 +37,7 @@ class New(commands.Cog):
         async with async_session() as session:
             guild_record = (
                 await session.execute(
-                    select(Guild).where(
-                        Guild.guild_id == ctx.guild_id
-                    )
+                    select(Guild).where(Guild.guild_id == ctx.guild_id)
                 )
             ).scalar_one_or_none()
 
@@ -180,7 +178,9 @@ class New(commands.Cog):
         message_to_role_settings_channel: discord.Message = (
             await role_setting_channel.send(embed=embed_to_role_settings_channel)
         )
-        interesting_emoji = await ctx.guild.fetch_emoji(guild_record.interesting_emoji_id)
+        interesting_emoji = await ctx.guild.fetch_emoji(
+            guild_record.interesting_emoji_id
+        )
         await message_to_role_settings_channel.add_reaction(interesting_emoji)
 
         # Prompt users to get the role at role_settings channel
@@ -212,7 +212,7 @@ class New(commands.Cog):
         async with async_session() as session:
             async with session.begin():
                 session.add(seminar)
-    
+
     @new.error
     async def new_error(
         self, ctx: discord.ApplicationContext, error: commands.CheckFailure
@@ -225,7 +225,7 @@ class New(commands.Cog):
             )
             await ctx.respond(embed=embed)
             return
-        print(f'{type(error)=}')
+        print(f"{type(error)=}")
         raise Exception("Unexpected error occurred.")
 
 

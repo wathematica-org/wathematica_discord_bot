@@ -7,8 +7,12 @@ from database import async_session
 from discord import Option
 from discord.commands import slash_command
 from discord.ext import commands
-from exceptions import InvalidCategoryException, InvalidChannelTypeException, ConfigurationNotCompleteException
-from model import Seminar, SeminarState,Category
+from exceptions import (
+    InvalidCategoryException,
+    InvalidChannelTypeException,
+    ConfigurationNotCompleteException,
+)
+from model import Seminar, SeminarState, Category
 from sqlalchemy import select
 from sqlalchemy.exc import NoResultFound
 
@@ -19,7 +23,9 @@ class ChangeLeader(commands.Cog):
 
     @commands.guild_only()
     @registered_server_only()
-    @specific_states_only(states=[SeminarState.PENDING, SeminarState.ONGOING, SeminarState.PAUSED])
+    @specific_states_only(
+        states=[SeminarState.PENDING, SeminarState.ONGOING, SeminarState.PAUSED]
+    )
     @textchannel_only()
     @slash_command(
         name="chleader",
@@ -76,7 +82,9 @@ class ChangeLeader(commands.Cog):
                 try:
                     this_seminar: Seminar = (
                         await session.execute(
-                            select(Seminar).join(Category).where(
+                            select(Seminar)
+                            .join(Category)
+                            .where(
                                 Seminar.channel_id == ctx.channel.id,
                                 Category.guild_id == ctx.guild_id,
                             )
@@ -138,7 +146,7 @@ class ChangeLeader(commands.Cog):
         if isinstance(error, InvalidCategoryException):
             embed = discord.Embed(
                 title="<:x:960095353577807883> 不正な操作です",
-                description='《ゼミ(仮立て)》または《ゼミ(本運用)》にあるテキストチャンネルでのみ実行可能です。',
+                description="《ゼミ(仮立て)》または《ゼミ(本運用)》にあるテキストチャンネルでのみ実行可能です。",
                 color=discord.Colour.red(),
             )
             await ctx.respond(

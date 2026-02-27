@@ -5,7 +5,11 @@ from checks import specific_states_only, textchannel_only, registered_server_onl
 from database import async_session
 from discord.commands import slash_command
 from discord.ext import commands
-from exceptions import InvalidCategoryException, InvalidChannelTypeException, ConfigurationNotCompleteException
+from exceptions import (
+    InvalidCategoryException,
+    InvalidChannelTypeException,
+    ConfigurationNotCompleteException,
+)
 from model import Seminar, SeminarState, Category, Guild
 import utils
 from sqlalchemy import select
@@ -18,11 +22,13 @@ class End(commands.Cog):
 
     @commands.guild_only()
     @registered_server_only()
-    @specific_states_only(states=[SeminarState.PENDING, SeminarState.ONGOING, SeminarState.PAUSED])
+    @specific_states_only(
+        states=[SeminarState.PENDING, SeminarState.ONGOING, SeminarState.PAUSED]
+    )
     @textchannel_only()
     @slash_command(
         name="end",
-        description='終了したゼミを《ゼミ(終了)》へ移動させ、ロールを削除します。',
+        description="終了したゼミを《ゼミ(終了)》へ移動させ、ロールを削除します。",
     )
     async def end(self, ctx: discord.ApplicationContext):
         # [ give additional information to type checker
@@ -40,7 +46,9 @@ class End(commands.Cog):
                 try:
                     this_seminar: Seminar = (
                         await session.execute(
-                            select(Seminar).join(Category).where(
+                            select(Seminar)
+                            .join(Category)
+                            .where(
                                 Seminar.channel_id == ctx.channel.id,
                                 Category.guild_id == ctx.guild_id,
                             )
@@ -67,7 +75,9 @@ class End(commands.Cog):
                     try:
                         (
                             await session.execute(
-                                select(Seminar).join(Category).where(
+                                select(Seminar)
+                                .join(Category)
+                                .where(
                                     Seminar.name == seminar_name,
                                     Seminar.category_id == finished_category.id,
                                     Category.guild_id == ctx.guild_id,
@@ -79,7 +89,7 @@ class End(commands.Cog):
                     else:
                         embed = discord.Embed(
                             title="<:x:960095353577807883> チャンネル名の重複を検出しました",
-                            description=f'すでに同名のゼミが{finished_category.name}に存在します。ゼミ名を `/rename` してから終了してください。',
+                            description=f"すでに同名のゼミが{finished_category.name}に存在します。ゼミ名を `/rename` してから終了してください。",
                             color=discord.Colour.red(),
                         )
                         await ctx.respond(embed=embed)
@@ -113,7 +123,7 @@ class End(commands.Cog):
         )
         embed = discord.Embed(
             title="<:white_check_mark:960095096563466250> チャンネル移動成功",
-            description=f'チャンネルを《{finished_seminar_category.name}》へ移動しました。',
+            description=f"チャンネルを《{finished_seminar_category.name}》へ移動しました。",
             color=discord.Colour.brand_green(),
         )
         await ctx.respond(embed=embed)
@@ -142,7 +152,9 @@ class End(commands.Cog):
                 # here, it is ensured that the seminar exists in the database
                 this_seminar: Seminar = (
                     await session.execute(
-                        select(Seminar).join(Category).where(
+                        select(Seminar)
+                        .join(Category)
+                        .where(
                             Seminar.channel_id == ctx.channel.id,
                             Category.guild_id == ctx.guild_id,
                         )
@@ -158,9 +170,7 @@ class End(commands.Cog):
         async with async_session() as session:
             guild_record = (
                 await session.execute(
-                    select(Guild).where(
-                        Guild.guild_id == ctx.guild_id
-                    )
+                    select(Guild).where(Guild.guild_id == ctx.guild_id)
                 )
             ).scalar_one_or_none()
         role_setting_channel = ctx.guild.get_channel(
@@ -217,7 +227,7 @@ class End(commands.Cog):
         if isinstance(error, InvalidCategoryException):
             embed = discord.Embed(
                 title="<:x:960095353577807883> 不正な操作です",
-                description='《ゼミ(仮立て)》または《ゼミ(本運用)》にあるテキストチャンネルでのみ実行可能です。',
+                description="《ゼミ(仮立て)》または《ゼミ(本運用)》にあるテキストチャンネルでのみ実行可能です。",
                 color=discord.Colour.red(),
             )
             await ctx.respond(embed=embed)

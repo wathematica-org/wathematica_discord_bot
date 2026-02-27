@@ -22,9 +22,7 @@ class RoleRemover(commands.Cog):
         async with async_session() as session:
             guild_record = (
                 await session.execute(
-                    select(Guild).where(
-                        Guild.guild_id == payload.guild_id
-                    )
+                    select(Guild).where(Guild.guild_id == payload.guild_id)
                 )
             ).scalar_one_or_none()
 

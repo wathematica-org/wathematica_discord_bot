@@ -33,14 +33,16 @@ def specific_states_only(states: list[SeminarState]):
     """
     Parameters:
         states: list[SeminarState]
-            
+            states of categories where this command can be executed.
     Return:
         _ : bool
+            whether the category where this command was executed matched any of states.
     Raises:
-
+        InvalidCategoryException
+            raised when the category where this command was executed matched none of states.
     """
+
     async def predicate(ctx: discord.ApplicationContext) -> bool:
-        # ctx の category を DB から検索してその state を取得する
         async with async_session() as session:
             category_record = (
                 await session.execute(
@@ -51,7 +53,6 @@ def specific_states_only(states: list[SeminarState]):
             ).scalar_one_or_none()
         
         if not category_record:
-            # サーバー設定をする必要がある，という ERROR 
             raise InvalidCategoryException(
                 "Command was executed in a category that is not registered in the datebase"
             )

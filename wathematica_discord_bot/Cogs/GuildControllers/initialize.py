@@ -8,7 +8,7 @@ from model import Guild, Category, SeminarState
 from view.settings_view import get_settings_embed
 
 
-class AutoSetup(commands.Cog):
+class Initialize(commands.Cog):
     def __init__(self, bot: discord.Bot):
         self.bot = bot
 
@@ -102,4 +102,4 @@ class AutoSetup(commands.Cog):
 
 
 def setup(bot: discord.Bot):
-    bot.add_cog(AutoSetup(bot))
+    bot.add_cog(Initialize(bot))

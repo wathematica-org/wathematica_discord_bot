@@ -1,6 +1,9 @@
 import discord
 from discord.ext import commands
 from exceptions import InvalidCategoryException, InvalidChannelTypeException
+from model import SeminarState, Category
+from database import async_session
+from sqlalchemy import select
 
 
 def specific_categories_only(category_ids: list[int]):
@@ -18,6 +21,42 @@ def specific_categories_only(category_ids: list[int]):
 
     async def predicate(ctx: discord.ApplicationContext) -> bool:
         if ctx.channel.category_id in category_ids:
+            return True
+        else:
+            raise InvalidCategoryException(
+                "Command was executed in an invalid category"
+            )
+
+    return commands.check(predicate)
+
+def specific_states_only(states: list[SeminarState]):
+    """
+    Parameters:
+        states: list[SeminarState]
+            
+    Return:
+        _ : bool
+    Raises:
+
+    """
+    async def predicate(ctx: discord.ApplicationContext) -> bool:
+        # ctx の category を DB から検索してその state を取得する
+        async with async_session() as session:
+            category_record = (
+                await session.execute(
+                    select(Category).where(
+                        Category.category_id == ctx.channel.category_id
+                    )
+                )
+            ).scalar_one_or_none()
+        
+        if not category_record:
+            # サーバー設定をする必要がある，という ERROR 
+            raise Exception(
+                "There is no server settings."
+            )
+
+        if category_record.state in states:
             return True
         else:
             raise InvalidCategoryException(

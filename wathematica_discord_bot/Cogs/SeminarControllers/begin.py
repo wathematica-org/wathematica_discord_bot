@@ -1,7 +1,7 @@
 import config
 import utils
 import discord
-from checks import specific_categories_only, textchannel_only
+from checks import specific_states_only, textchannel_only
 from database import async_session
 from discord.commands import slash_command
 from discord.ext import commands
@@ -16,12 +16,12 @@ class Begin(commands.Cog):
         self.bot = bot
 
     @commands.guild_only()
-    # @specific_categories_only(
-    #     category_ids=[
-    #         config.category_info["pending_seminars"]["id"],
-    #         config.category_info["paused_seminars"]["id"],
-    #     ]
-    # )
+    @specific_states_only(
+        states=[
+            SeminarState.PENDING,
+            SeminarState.PAUSED,
+        ]
+    )
     @textchannel_only()
     @slash_command(
         name="begin",

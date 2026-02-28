@@ -2,14 +2,7 @@ import discord
 from database import async_session
 from sqlalchemy import select
 from model import SeminarState, Category
-
-
-state2name = {
-    SeminarState.PENDING: "仮立て",
-    SeminarState.ONGOING: "本運用",
-    SeminarState.PAUSED: "休止中",
-    SeminarState.FINISHED: "終了",
-}
+from exceptions import CategoryNotRegisteredException, CategoryUnavailableException
 
 
 async def get_category(
@@ -17,7 +10,6 @@ async def get_category(
 ) -> discord.CategoryChannel:
     # find PENDING category
     async with async_session() as session:
-        # PENDING 用として登録されているカテゴリーをすべて取得
         records = (
             (
                 await session.execute(
@@ -32,10 +24,7 @@ async def get_category(
         )
 
     if not records:
-        await ctx.respond(
-            f":x: ゼミ({state2name[state]}) カテゴリーが登録されていません。管理者に `/setting` で設定を依頼してください。"
-        )
-        return
+        raise CategoryNotRegisteredException
 
     target_category: discord.CategoryChannel | None = None
     for cat_record in records:
@@ -48,9 +37,6 @@ async def get_category(
             break
 
     if not target_category:
-        await ctx.respond(
-            f":warning: すべての ゼミ({state2name[state]}) カテゴリーが満杯です！新しくカテゴリーを作成して設定してください。"
-        )
-        return
+        raise CategoryUnavailableException
 
     return target_category

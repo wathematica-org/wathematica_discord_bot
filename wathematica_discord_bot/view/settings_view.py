@@ -122,22 +122,21 @@ class CategoryStateSelectView(discord.ui.View):
         placeholder="このカテゴリーの役割を選択してください...",
         options=[
             discord.SelectOption(
-                label="仮立て用", value="PENDING", emoji=":yellow_circle:"
+                label="仮立て用", value="PENDING",
             ),
             discord.SelectOption(
-                label="本運用用", value="ONGOING", emoji=":greed_circle:"
+                label="本運用用", value="ONGOING",
             ),
             discord.SelectOption(
-                label="休止中用", value="PAUSED", emoji=":blue_circle:"
+                label="休止中用", value="PAUSED",
             ),
             discord.SelectOption(
-                label="終了済み用", value="FINISHED", emoji=":red_circle:"
+                label="終了済み用", value="FINISHED",
             ),
             discord.SelectOption(
                 label="登録を解除する",
                 value="REMOVE",
                 description="Botの管理対象から外します",
-                emoji="🗑️",
             ),
         ],
     )

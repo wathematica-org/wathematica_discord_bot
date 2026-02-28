@@ -5,11 +5,7 @@ from checks import specific_states_only, textchannel_only, registered_server_onl
 from database import async_session
 from discord.commands import slash_command
 from discord.ext import commands
-from exceptions import (
-    InvalidCategoryException,
-    InvalidChannelTypeException,
-    ConfigurationNotCompleteException,
-)
+from exceptions import *
 from model import Seminar, SeminarState, Category, Guild
 import utils
 from sqlalchemy import select
@@ -228,6 +224,22 @@ class End(commands.Cog):
             embed = discord.Embed(
                 title="<:x:960095353577807883> 不正な操作です",
                 description="《ゼミ(仮立て)》または《ゼミ(本運用)》にあるテキストチャンネルでのみ実行可能です。",
+                color=discord.Colour.red(),
+            )
+            await ctx.respond(embed=embed)
+            return
+        if isinstance(error, CategoryNotRegisteredException):
+            embed = discord.Embed(
+                title=":x: チャンネル作成失敗",
+                description="《ゼミ(終了)》カテゴリーが登録されていません。管理者に `/setting` で設定を依頼してください。",
+                color=discord.Colour.red(),
+            )
+            await ctx.respond(embed=embed)
+            return
+        if isinstance(error, CategoryUnavailableException):
+            embed = discord.Embed(
+                title=":x: チャンネル作成失敗",
+                description="《ゼミ(終了)》カテゴリーに空きがありません。管理者にカテゴリー作成・設定を依頼してください。",
                 color=discord.Colour.red(),
             )
             await ctx.respond(embed=embed)

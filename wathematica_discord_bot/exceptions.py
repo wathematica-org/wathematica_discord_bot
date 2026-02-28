@@ -19,3 +19,12 @@ class SystemChannelOnlyException(discord.CheckFailure):
 
 class HasEngineerRoleException(discord.CheckFailure):
     pass
+
+
+class CategoryNotRegisteredException(discord.CheckFailure):
+    pass
+
+
+class CategoryUnavailableException(discord.CheckFailure):
+    pass
+

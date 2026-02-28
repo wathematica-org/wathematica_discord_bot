@@ -9,7 +9,7 @@ from model import Seminar, SeminarState, Category, Guild
 import utils
 from sqlalchemy import select
 from sqlalchemy.exc import NoResultFound
-from exceptions import ConfigurationNotCompleteException
+from exceptions import ConfigurationNotCompleteException, CategoryUnavailableException, CategoryNotRegisteredException
 from checks import registered_server_only
 
 
@@ -219,13 +219,28 @@ class New(commands.Cog):
     ):
         if isinstance(error, ConfigurationNotCompleteException):
             embed = discord.Embed(
-                title="<:x:960095353577807883> サーバー設定ができていません",
+                title=":x: サーバー設定ができていません",
                 description="管理者に `/setting` で設定を依頼してください。",
                 color=discord.Colour.red(),
             )
             await ctx.respond(embed=embed)
             return
-        print(f"{type(error)=}")
+        if isinstance(error, CategoryNotRegisteredException):
+            embed = discord.Embed(
+                title=":x: チャンネル作成失敗",
+                description="《ゼミ(仮立て)》カテゴリーが登録されていません。管理者に `/setting` で設定を依頼してください。",
+                color=discord.Colour.red(),
+            )
+            await ctx.respond(embed=embed)
+            return
+        if isinstance(error, CategoryUnavailableException):
+            embed = discord.Embed(
+                title=":x: チャンネル作成失敗",
+                description="《ゼミ(仮立て)》カテゴリーに空きがありません。管理者にカテゴリー作成・設定を依頼してください。",
+                color=discord.Colour.red(),
+            )
+            await ctx.respond(embed=embed)
+            return
         raise Exception("Unexpected error occurred.")
 
 

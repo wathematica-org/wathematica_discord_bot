@@ -162,7 +162,7 @@ class CategoryStateSelectView(discord.ui.View):
                 if state_val == "REMOVE":
                     if category_record:
                         await session.delete(category_record)
-                        msg = f"🗑️ カテゴリー {self.selected_category.mention} の登録を解除しました。"
+                        msg = f"🗑️ カテゴリー《{self.selected_category.name}》の登録を解除しました。"
                     else:
                         msg = ":warning: そのカテゴリーは元々登録されていません。"
                 else:
@@ -178,7 +178,7 @@ class CategoryStateSelectView(discord.ui.View):
                             category_type="regular",
                         )
                         session.add(category_record)
-                    msg = f":white_check_mark: カテゴリー {self.selected_category.mention} を `{state_val}` として登録しました！"
+                    msg = f":white_check_mark: カテゴリー《{self.selected_category.name}》 を `{state_val}` として登録しました！"
 
         new_embed = await get_settings_embed(
             interaction.guild.id, interaction.guild.name, self.bot
@@ -206,7 +206,7 @@ class CategorySelectView(discord.ui.View):
             self.bot, self.dashboard_message, selected_category
         )
         await interaction.response.edit_message(
-            content=f"次に、カテゴリー {selected_category.mention} の役割を選択してください：",
+            content=f"次に、カテゴリー《{selected_category.name}》の役割を選択してください：",
             view=next_view,
         )
 

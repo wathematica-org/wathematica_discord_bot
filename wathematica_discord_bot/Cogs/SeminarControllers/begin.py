@@ -1,11 +1,11 @@
-import config
+import utils
 import discord
-from checks import specific_categories_only, textchannel_only
+from checks import specific_states_only, textchannel_only, registered_server_only
 from database import async_session
 from discord.commands import slash_command
 from discord.ext import commands
-from exceptions import InvalidCategoryException, InvalidChannelTypeException
-from model import Seminar, SeminarState
+from exceptions import *
+from model import Seminar, SeminarState, Category
 from sqlalchemy import select
 from sqlalchemy.exc import NoResultFound
 
@@ -15,17 +15,17 @@ class Begin(commands.Cog):
         self.bot = bot
 
     @commands.guild_only()
-    @specific_categories_only(
-        category_ids=[
-            config.category_info["pending_seminars"]["id"],
-            config.category_info["paused_seminars"]["id"],
+    @registered_server_only()
+    @specific_states_only(
+        states=[
+            SeminarState.PENDING,
+            SeminarState.PAUSED,
         ]
     )
     @textchannel_only()
     @slash_command(
         name="begin",
-        description=f'ゼミを{config.category_info["ongoing_seminars"]["name"]}に移動させます',
-        guild_ids=[config.guild_id],
+        description="ゼミを《ゼミ(本運用)》に移動させます",
     )
     async def begin(self, ctx: discord.ApplicationContext):
         # [ give additional information to type checker
@@ -33,9 +33,7 @@ class Begin(commands.Cog):
         assert isinstance(ctx.guild, discord.Guild)
         # ]
 
-        ongoing_seminar_category = ctx.guild.get_channel(
-            config.category_info["ongoing_seminars"]["id"]
-        )
+        ongoing_seminar_category = await utils.get_category(ctx, SeminarState.ONGOING)
         if not isinstance(ongoing_seminar_category, discord.CategoryChannel):
             embed = discord.Embed(
                 title="<:x:960095353577807883> システムエラー",
@@ -46,44 +44,51 @@ class Begin(commands.Cog):
             return
 
         # move the channel to the ongoing_seminar category
-
-        number_of_channels = await get_nuber_of_channel(
-            ctx, config.category_info["ongoing_seminars"]["name"]
+        await ctx.channel.edit(
+            category=ongoing_seminar_category,
+            reason=f"Requested by {ctx.author.name}",
         )
-        if number_of_channels < MAX_CHANNELS:
-            await ctx.channel.edit(
-                category=ongoing_seminar_category,
-                reason=f"Requested by {ctx.author.name}",
-            )
-        else:
-            ongoing_seminar_category = ctx.guild.get_channel(
-                config.category_info["ongoing_seminars2"]["id"]
-            )
-            if not isinstance(ongoing_seminar_category, discord.CategoryChannel):
-                embed = discord.Embed(
-                    title="<:x:960095353577807883> システムエラー",
-                    description="管理者向けメッセージ: `ongoing_seminars2` カテゴリが見つかりませんでした。",
-                    color=discord.Colour.red(),
-                )
-                await ctx.respond(embed=embed)
-                return
-            await ctx.channel.edit(
-                category=ongoing_seminar_category,
-                reason=f"Requested by {ctx.author.name}",
-            )
+
+        # number_of_channels = await get_nuber_of_channel(
+        #     ctx, config.category_info["ongoing_seminars"]["name"]
+        # )
+        # if number_of_channels < MAX_CHANNELS:
+        #     await ctx.channel.edit(
+        #         category=ongoing_seminar_category,
+        #         reason=f"Requested by {ctx.author.name}",
+        #     )
+        # else:
+        #     ongoing_seminar_category = ctx.guild.get_channel(
+        #         config.category_info["ongoing_seminars2"]["id"]
+        #     )
+        #     if not isinstance(ongoing_seminar_category, discord.CategoryChannel):
+        #         embed = discord.Embed(
+        #             title="<:x:960095353577807883> システムエラー",
+        #             description="管理者向けメッセージ: `ongoing_seminars2` カテゴリが見つかりませんでした。",
+        #             color=discord.Colour.red(),
+        #         )
+        #         await ctx.respond(embed=embed)
+        #         return
+        #     await ctx.channel.edit(
+        #         category=ongoing_seminar_category,
+        #         reason=f"Requested by {ctx.author.name}",
+        #     )
 
         async with async_session() as session:
             async with session.begin():
                 try:
                     this_seminar: Seminar = (
                         await session.execute(
-                            select(Seminar).where(
+                            select(Seminar)
+                            .join(Category)
+                            .where(
                                 Seminar.channel_id == ctx.channel.id,
-                                Seminar.server_id == ctx.guild_id,
+                                Category.guild_id == ctx.guild_id,
                             )
                         )
                     ).scalar_one()
-                    this_seminar.seminar_state = SeminarState.ONGOING
+                    # this_seminar.seminar_state = SeminarState.ONGOING
+                    this_seminar.category_id = ongoing_seminar_category.id
                 except NoResultFound:
                     embed = discord.Embed(
                         title="<:warning:960146803846684692> データベース編集失敗",
@@ -94,7 +99,7 @@ class Begin(commands.Cog):
 
         embed = discord.Embed(
             title="<:white_check_mark:960095096563466250> チャンネル移動成功",
-            description=f'チャンネルを{config.category_info["ongoing_seminars"]["name"]}へ移動しました。',
+            description=f"チャンネルを《{ongoing_seminar_category.name}》へ移動しました。",
             color=discord.Colour.brand_green(),
         )
         await ctx.respond(embed=embed)
@@ -103,6 +108,14 @@ class Begin(commands.Cog):
     async def begin_error(
         self, ctx: discord.ApplicationContext, error: commands.CheckFailure
     ):
+        if isinstance(error, ConfigurationNotCompleteException):
+            embed = discord.Embed(
+                title="<:x:960095353577807883> サーバー設定ができていません",
+                description="管理者に `/setting` で設定を依頼してください。",
+                color=discord.Colour.red(),
+            )
+            await ctx.respond(embed=embed)
+            return
         if isinstance(error, InvalidChannelTypeException):
             embed = discord.Embed(
                 title="<:x:960095353577807883> 不正な操作です",
@@ -114,7 +127,23 @@ class Begin(commands.Cog):
         if isinstance(error, InvalidCategoryException):
             embed = discord.Embed(
                 title="<:x:960095353577807883> 不正な操作です",
-                description=f'{config.category_info["pending_seminars"]["name"]}または{config.category_info["paused_seminars"]["name"]}にあるテキストチャンネルでのみ実行可能です。',
+                description="《ゼミ(仮立て)》にあるテキストチャンネルでのみ実行可能です。",
+                color=discord.Colour.red(),
+            )
+            await ctx.respond(embed=embed)
+            return
+        if isinstance(error, CategoryNotRegisteredException):
+            embed = discord.Embed(
+                title=":x: チャンネル作成失敗",
+                description="《ゼミ(本運用)》カテゴリーが登録されていません。管理者に `/setting` で設定を依頼してください。",
+                color=discord.Colour.red(),
+            )
+            await ctx.respond(embed=embed)
+            return
+        if isinstance(error, CategoryUnavailableException):
+            embed = discord.Embed(
+                title=":x: チャンネル作成失敗",
+                description="《ゼミ(本運用)》カテゴリーに空きがありません。管理者にカテゴリー作成・設定を依頼してください。",
                 color=discord.Colour.red(),
             )
             await ctx.respond(embed=embed)
@@ -127,9 +156,9 @@ def setup(bot: discord.Bot):
     bot.add_cog(Begin(bot))
 
 
-MAX_CHANNELS = 50
+# MAX_CHANNELS = 50
 
 
-async def get_nuber_of_channel(ctx: discord.ApplicationContext, category_name: str):
-    category = discord.utils.get(ctx.guild.categories, name=category_name)
-    return len(category.channels)
+# async def get_nuber_of_channel(ctx: discord.ApplicationContext, category_name: str):
+#     category = discord.utils.get(ctx.guild.categories, name=category_name)
+#     return len(category.channels)

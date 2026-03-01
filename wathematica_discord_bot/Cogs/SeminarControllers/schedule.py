@@ -1,4 +1,3 @@
-import config
 import discord
 from discord import Option
 from discord.commands import slash_command
@@ -13,7 +12,6 @@ class Schedule(commands.Cog):
     @slash_command(
         name="schedule",
         description="日程調整用のメッセージを送信します。",
-        guild_ids=[config.guild_id],
     )
     async def schedule(
         self,

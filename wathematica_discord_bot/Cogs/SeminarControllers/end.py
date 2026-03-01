@@ -1,13 +1,13 @@
 import datetime
 
-import config
 import discord
-from checks import specific_categories_only, textchannel_only
+from checks import specific_states_only, textchannel_only, registered_server_only
 from database import async_session
 from discord.commands import slash_command
 from discord.ext import commands
-from exceptions import InvalidCategoryException, InvalidChannelTypeException
-from model import Seminar, SeminarState
+from exceptions import *
+from model import Seminar, SeminarState, Category, Guild
+import utils
 from sqlalchemy import select
 from sqlalchemy.exc import NoResultFound
 
@@ -17,18 +17,14 @@ class End(commands.Cog):
         self.bot = bot
 
     @commands.guild_only()
-    @specific_categories_only(
-        category_ids=[
-            config.category_info["pending_seminars"]["id"],
-            config.category_info["ongoing_seminars"]["id"],
-            config.category_info["ongoing_seminars2"]["id"],
-        ]
+    @registered_server_only()
+    @specific_states_only(
+        states=[SeminarState.PENDING, SeminarState.ONGOING, SeminarState.PAUSED]
     )
     @textchannel_only()
     @slash_command(
         name="end",
-        description=f'終了したゼミを{config.category_info["finished_seminars"]["name"]}へ移動させ、ロールを削除します。',
-        guild_ids=[config.guild_id],
+        description="終了したゼミを《ゼミ(終了)》へ移動させ、ロールを削除します。",
     )
     async def end(self, ctx: discord.ApplicationContext):
         # [ give additional information to type checker
@@ -40,14 +36,17 @@ class End(commands.Cog):
 
         # this command must be executed by the leader of the seminar
         # or by someone who has the manage_channels permission
+        finished_category = await utils.get_category(ctx, SeminarState.FINISHED)
         async with async_session() as session:
             async with session.begin():
                 try:
                     this_seminar: Seminar = (
                         await session.execute(
-                            select(Seminar).where(
+                            select(Seminar)
+                            .join(Category)
+                            .where(
                                 Seminar.channel_id == ctx.channel.id,
-                                Seminar.server_id == ctx.guild_id,
+                                Category.guild_id == ctx.guild_id,
                             )
                         )
                     ).scalar_one()
@@ -64,15 +63,20 @@ class End(commands.Cog):
                     await ctx.respond(embed=embed)
                     return
                 else:
+                    # TODO: FINISHED category を探してそれに対応するレコードを検索する
+                    # /rename ではなく番号づけによって終了できるようにする
+
                     # Check if there's a text channel with the same name in the finished_seminars category.
                     # Tips: Discord does not allow two channels with the same name in the same category.
                     try:
                         (
                             await session.execute(
-                                select(Seminar).where(
+                                select(Seminar)
+                                .join(Category)
+                                .where(
                                     Seminar.name == seminar_name,
-                                    Seminar.seminar_state == SeminarState.FINISHED,
-                                    Seminar.server_id == ctx.guild_id,
+                                    Seminar.category_id == finished_category.id,
+                                    Category.guild_id == ctx.guild_id,
                                 )
                             )
                         ).scalar_one()
@@ -81,7 +85,7 @@ class End(commands.Cog):
                     else:
                         embed = discord.Embed(
                             title="<:x:960095353577807883> チャンネル名の重複を検出しました",
-                            description=f'すでに同名のゼミが{config.category_info["finished_seminars"]["name"]}に存在します。ゼミ名を `/rename` してから終了してください。',
+                            description=f"すでに同名のゼミが{finished_category.name}に存在します。ゼミ名を `/rename` してから終了してください。",
                             color=discord.Colour.red(),
                         )
                         await ctx.respond(embed=embed)
@@ -100,9 +104,7 @@ class End(commands.Cog):
             return
 
         # move the text channel to the finished_seminars category
-        finished_seminar_category = ctx.guild.get_channel(
-            config.category_info["finished_seminars"]["id"]
-        )
+        finished_seminar_category = await utils.get_category(SeminarState.FINISHED)
         if not isinstance(finished_seminar_category, discord.CategoryChannel):
             embed = discord.Embed(
                 title="<:x:960095353577807883> システムエラー",
@@ -117,7 +119,7 @@ class End(commands.Cog):
         )
         embed = discord.Embed(
             title="<:white_check_mark:960095096563466250> チャンネル移動成功",
-            description=f'チャンネルを{config.category_info["finished_seminars"]["name"]}へ移動しました。',
+            description=f"チャンネルを《{finished_seminar_category.name}》へ移動しました。",
             color=discord.Colour.brand_green(),
         )
         await ctx.respond(embed=embed)
@@ -146,18 +148,29 @@ class End(commands.Cog):
                 # here, it is ensured that the seminar exists in the database
                 this_seminar: Seminar = (
                     await session.execute(
-                        select(Seminar).where(
+                        select(Seminar)
+                        .join(Category)
+                        .where(
                             Seminar.channel_id == ctx.channel.id,
-                            Seminar.server_id == ctx.guild_id,
+                            Category.guild_id == ctx.guild_id,
                         )
                     )
                 ).scalar_one()
-                this_seminar.seminar_state = SeminarState.FINISHED
+                this_seminar.category_id = finished_category.id
                 this_seminar.finished_at = datetime.datetime.now()
 
         # delete the message in role_settings channel
+        # role_setting_channel = ctx.guild.get_channel(
+        #     config.channel_info["role_settings"]["id"]
+        # )
+        async with async_session() as session:
+            guild_record = (
+                await session.execute(
+                    select(Guild).where(Guild.guild_id == ctx.guild_id)
+                )
+            ).scalar_one_or_none()
         role_setting_channel = ctx.guild.get_channel(
-            config.channel_info["role_settings"]["id"]
+            guild_record.role_setting_channel_id
         )
         if not isinstance(role_setting_channel, discord.TextChannel):
             embed = discord.Embed(
@@ -191,6 +204,14 @@ class End(commands.Cog):
     async def end_error(
         self, ctx: discord.ApplicationContext, error: commands.CheckFailure
     ):
+        if isinstance(error, ConfigurationNotCompleteException):
+            embed = discord.Embed(
+                title="<:x:960095353577807883> サーバー設定ができていません",
+                description="管理者に `/setting` で設定を依頼してください。",
+                color=discord.Colour.red(),
+            )
+            await ctx.respond(embed=embed)
+            return
         if isinstance(error, InvalidChannelTypeException):
             embed = discord.Embed(
                 title="<:x:960095353577807883> 不正な操作です",
@@ -202,7 +223,23 @@ class End(commands.Cog):
         if isinstance(error, InvalidCategoryException):
             embed = discord.Embed(
                 title="<:x:960095353577807883> 不正な操作です",
-                description=f'{config.category_info["pending_seminars"]["name"]}または{config.category_info["ongoing_seminars"]["name"]}にあるテキストチャンネルでのみ実行可能です。',
+                description="《ゼミ(仮立て)》または《ゼミ(本運用)》にあるテキストチャンネルでのみ実行可能です。",
+                color=discord.Colour.red(),
+            )
+            await ctx.respond(embed=embed)
+            return
+        if isinstance(error, CategoryNotRegisteredException):
+            embed = discord.Embed(
+                title=":x: チャンネル作成失敗",
+                description="《ゼミ(終了)》カテゴリーが登録されていません。管理者に `/setting` で設定を依頼してください。",
+                color=discord.Colour.red(),
+            )
+            await ctx.respond(embed=embed)
+            return
+        if isinstance(error, CategoryUnavailableException):
+            embed = discord.Embed(
+                title=":x: チャンネル作成失敗",
+                description="《ゼミ(終了)》カテゴリーに空きがありません。管理者にカテゴリー作成・設定を依頼してください。",
                 color=discord.Colour.red(),
             )
             await ctx.respond(embed=embed)

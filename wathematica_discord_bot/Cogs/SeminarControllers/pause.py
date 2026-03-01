@@ -1,13 +1,13 @@
-import config
 import discord
-from checks import specific_categories_only, textchannel_only
+from checks import specific_states_only, textchannel_only, registered_server_only
 from database import async_session
 from discord.commands import slash_command
 from discord.ext import commands
-from exceptions import InvalidCategoryException, InvalidChannelTypeException
-from model import Seminar, SeminarState
+from exceptions import *
+from model import Seminar, SeminarState, Category
 from sqlalchemy import select
 from sqlalchemy.exc import NoResultFound
+import utils
 
 
 class Pause(commands.Cog):
@@ -15,17 +15,12 @@ class Pause(commands.Cog):
         self.bot = bot
 
     @commands.guild_only()
-    @specific_categories_only(
-        category_ids=[
-            config.category_info["ongoing_seminars"]["id"],
-            config.category_info["ongoing_seminars2"]["id"],
-        ]
-    )
+    @registered_server_only()
+    @specific_states_only(states=[SeminarState.ONGOING])
     @textchannel_only()
     @slash_command(
         name="pause",
-        description=f'ゼミを{config.category_info["ongoing_seminars"]["name"]}から{config.category_info["paused_seminars"]["name"]}に移動させます',
-        guild_ids=[config.guild_id],
+        description="ゼミを《ゼミ(本運用)》から《ゼミ(休止中)》に移動させます",
     )
     async def pause(self, ctx: discord.ApplicationContext):
         # [ give additional information to type checker
@@ -33,9 +28,7 @@ class Pause(commands.Cog):
         assert isinstance(ctx.guild, discord.Guild)
         # ]
 
-        paused_seminar_category = ctx.guild.get_channel(
-            config.category_info["paused_seminars"]["id"]
-        )
+        paused_seminar_category = await utils.get_category(ctx, SeminarState.PAUSED)
         if not isinstance(paused_seminar_category, discord.CategoryChannel):
             embed = discord.Embed(
                 title="<:x:960095353577807883> システムエラー",
@@ -55,13 +48,15 @@ class Pause(commands.Cog):
                 try:
                     this_seminar: Seminar = (
                         await session.execute(
-                            select(Seminar).where(
+                            select(Seminar)
+                            .join(Category)
+                            .where(
                                 Seminar.channel_id == ctx.channel.id,
-                                Seminar.server_id == ctx.guild_id,
+                                Category.guild_id == ctx.guild_id,
                             )
                         )
                     ).scalar_one()
-                    this_seminar.seminar_state = SeminarState.PAUSED
+                    this_seminar.category_id = paused_seminar_category.id
                 except NoResultFound:
                     embed = discord.Embed(
                         title="<:warning:960146803846684692> データベース編集失敗",
@@ -72,7 +67,7 @@ class Pause(commands.Cog):
 
         embed = discord.Embed(
             title="<:white_check_mark:960095096563466250> チャンネル移動成功",
-            description=f'チャンネルを{config.category_info["paused_seminars"]["name"]}へ移動しました。',
+            description=f"チャンネルを《{paused_seminar_category.name}》へ移動しました。",
             color=discord.Colour.brand_green(),
         )
         await ctx.respond(embed=embed)
@@ -81,6 +76,14 @@ class Pause(commands.Cog):
     async def pause_error(
         self, ctx: discord.ApplicationContext, error: commands.CheckFailure
     ):
+        if isinstance(error, ConfigurationNotCompleteException):
+            embed = discord.Embed(
+                title="<:x:960095353577807883> サーバー設定ができていません",
+                description="管理者に `/setting` で設定を依頼してください。",
+                color=discord.Colour.red(),
+            )
+            await ctx.respond(embed=embed)
+            return
         if isinstance(error, InvalidChannelTypeException):
             embed = discord.Embed(
                 title="<:x:960095353577807883> 不正な操作です",
@@ -92,7 +95,23 @@ class Pause(commands.Cog):
         if isinstance(error, InvalidCategoryException):
             embed = discord.Embed(
                 title="<:x:960095353577807883> 不正な操作です",
-                description=f'{config.category_info["ongoing_seminars"]["name"]}、または{config.category_info["ongoing_seminars2"]["id"]}にあるテキストチャンネルでのみ実行可能です。',
+                description="《ゼミ(本運用)》にあるテキストチャンネルでのみ実行可能です。",
+                color=discord.Colour.red(),
+            )
+            await ctx.respond(embed=embed)
+            return
+        if isinstance(error, CategoryNotRegisteredException):
+            embed = discord.Embed(
+                title=":x: チャンネル作成失敗",
+                description="《ゼミ(休止中)》カテゴリーが登録されていません。管理者に `/setting` で設定を依頼してください。",
+                color=discord.Colour.red(),
+            )
+            await ctx.respond(embed=embed)
+            return
+        if isinstance(error, CategoryUnavailableException):
+            embed = discord.Embed(
+                title=":x: チャンネル作成失敗",
+                description="《ゼミ(休止中)》カテゴリーに空きがありません。管理者にカテゴリー作成・設定を依頼してください。",
                 color=discord.Colour.red(),
             )
             await ctx.respond(embed=embed)

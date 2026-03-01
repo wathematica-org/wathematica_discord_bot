@@ -1,8 +1,8 @@
-import config
 import discord
 from discord import ExtensionNotFound, ExtensionNotLoaded, Option
 from discord.commands import slash_command
 from discord.ext import commands
+from checks import has_engineer_role_only
 
 
 class Reload(commands.Cog):
@@ -12,11 +12,11 @@ class Reload(commands.Cog):
     @slash_command(
         name="reload",
         description="[技術部専用] 指定されたCogをリロードします",
-        guild_ids=[config.guild_id],
+        default_member_permissions=discord.Permissions(administrator=True),
     )
     # see https://docs.pycord.dev/en/master/ext/commands/api.html#checks to
     # know how to use 'checker' decorators like 'has_role'
-    @commands.has_role(config.engineer_role_id)
+    @has_engineer_role_only()
     async def reload(
         self,
         ctx: discord.ApplicationContext,

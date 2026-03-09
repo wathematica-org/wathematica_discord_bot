@@ -3,6 +3,7 @@ FROM ghcr.io/astral-sh/uv:python3.12-alpine
 
 # update the certificates
 RUN apk update && apk add ca-certificates && update-ca-certificates
+RUN apk add sqlite
 
 # install packages
 COPY pyproject.toml uv.lock .python-version ./

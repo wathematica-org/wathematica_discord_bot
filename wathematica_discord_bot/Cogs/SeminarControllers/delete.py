@@ -4,7 +4,7 @@ from database import async_session
 from discord import Option
 from discord.commands import slash_command
 from discord.ext import commands
-from model import Seminar
+from model import Seminar, Category, Guild
 from sqlalchemy import select
 from sqlalchemy.exc import NoResultFound
 
@@ -17,7 +17,6 @@ class Delete(commands.Cog):
     @slash_command(
         name="delete",
         description="名前が seminar_name のゼミを削除します。",
-        guild_ids=[config.guild_id],
     )
     async def delete(
         self,
@@ -38,6 +37,13 @@ class Delete(commands.Cog):
         assert isinstance(ctx.author, discord.Member)
         # ]
 
+        async with async_session() as session:
+            guild_record = (
+                await session.execute(
+                    select(Guild).where(Guild.guild_id == ctx.guild_id)
+                )
+            ).scalar_one_or_none()
+
         # this command must be executed by the leader of the seminar
         # or by someone who has the manage_channels permission
         async with async_session() as session:
@@ -45,9 +51,11 @@ class Delete(commands.Cog):
                 try:
                     this_seminar: Seminar = (
                         await session.execute(
-                            select(Seminar).where(
+                            select(Seminar)
+                            .join(Category)
+                            .where(
                                 Seminar.name == seminar_name,
-                                Seminar.server_id == ctx.guild_id,
+                                Category.guild_id == ctx.guild_id,
                             )
                         )
                     ).scalar_one()
@@ -129,8 +137,11 @@ class Delete(commands.Cog):
             await ctx.respond(embed=embed)
 
         # delete the message in role_settings channel
+        # role_setting_channel = ctx.guild.get_channel(
+        #     config.channel_info["role_settings"]["id"]
+        # )
         role_setting_channel = ctx.guild.get_channel(
-            config.channel_info["role_settings"]["id"]
+            guild_record.role_setting_channel_id
         )
         if not isinstance(role_setting_channel, discord.TextChannel):
             embed = discord.Embed(

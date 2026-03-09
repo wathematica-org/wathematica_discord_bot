@@ -2,7 +2,7 @@ import config
 import discord
 from database import async_session
 from discord.ext import commands
-from model import Seminar
+from model import Seminar, Guild
 from sqlalchemy import select
 from sqlalchemy.exc import NoResultFound
 
@@ -19,6 +19,13 @@ class RoleRemover(commands.Cog):
         # with payload.member, so fetch_message method is necessarily used here.
         if not payload.guild_id:
             return
+        async with async_session() as session:
+            guild_record = (
+                await session.execute(
+                    select(Guild).where(Guild.guild_id == payload.guild_id)
+                )
+            ).scalar_one_or_none()
+
         guild = self.bot.get_guild(payload.guild_id)
         if not guild:
             return
@@ -27,10 +34,10 @@ class RoleRemover(commands.Cog):
         if member.bot:
             return
         # ignore reactions that happens in channels other than role_setting channel
-        if payload.channel_id != config.channel_info["role_settings"]["id"]:
+        if payload.channel_id != guild_record.role_setting_channel_id:
             return
         # react only to "interesting" emoji
-        if payload.emoji.id != config.interesting_emoji_id:
+        if payload.emoji.id != guild_record.interesting_emoji_id:
             return
         channel = self.bot.get_channel(payload.channel_id)
         if not isinstance(channel, discord.TextChannel):

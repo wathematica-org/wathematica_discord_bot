@@ -1,6 +1,5 @@
 import textwrap
 
-import config
 import discord
 from discord import Option
 from discord.commands import slash_command
@@ -57,10 +56,10 @@ class Help(commands.Cog):
             embed.add_field(
                 name="/begin",
                 value=textwrap.dedent(
-                    f"""
+                    """
                     仮立てのチャンネル内で実行した場合: このゼミを本始動します。
                     休止中のチャンネル内で実行した場合: このゼミを再開します。
-                    テキストチャンネルが{config.category_info["ongoing_seminars"]['name']}カテゴリに移動します。
+                    テキストチャンネルが《ゼミ(本運用)》カテゴリに移動します。
                     """
                 ),
                 inline=False,
@@ -80,9 +79,9 @@ class Help(commands.Cog):
             embed.add_field(
                 name="/pause",
                 value=textwrap.dedent(
-                    f"""
+                    """
                     このゼミを休止します。本運用中のゼミでのみ実行できます。
-                    テキストチャンネルが{config.category_info["paused_seminars"]['name']}カテゴリに移動します。
+                    テキストチャンネルが《ゼミ(休止中)》カテゴリに移動します。
                     """
                 ),
                 inline=False,
@@ -91,9 +90,9 @@ class Help(commands.Cog):
             embed.add_field(
                 name="/end",
                 value=textwrap.dedent(
-                    f"""
+                    """
                     このゼミを終了します。
-                    テキストチャンネルが{config.category_info["finished_seminars"]['name']}に移動され、ロールとロール付与メッセージが削除されます。
+                    テキストチャンネルが《ゼミ(終了)》に移動され、ロールとロール付与メッセージが削除されます。
                     **このコマンドはゼミ長のみが実行できます。**
                     """
                 ),
@@ -139,7 +138,7 @@ class Help(commands.Cog):
     @slash_command(
         name="help",
         description="ヘルプを表示します。",
-        guild_ids=[config.guild_id],
+        # guild_ids=[config.guild_id],
     )
     async def help(
         self,

@@ -1,12 +1,15 @@
-import config
 import discord
-from checks import specific_categories_only, textchannel_only
+from checks import specific_states_only, textchannel_only, registered_server_only
 from database import async_session
 from discord import NotFound, Option
 from discord.commands import slash_command
 from discord.ext import commands
-from exceptions import InvalidCategoryException, InvalidChannelTypeException
-from model import Seminar, SeminarState
+from exceptions import (
+    InvalidCategoryException,
+    InvalidChannelTypeException,
+    ConfigurationNotCompleteException,
+)
+from model import Seminar, SeminarState, Category, Guild
 from sqlalchemy import select
 from sqlalchemy.exc import NoResultFound
 
@@ -16,18 +19,14 @@ class Rename(commands.Cog):
         self.bot = bot
 
     @commands.guild_only()
-    @specific_categories_only(
-        category_ids=[
-            config.category_info["pending_seminars"]["id"],
-            config.category_info["ongoing_seminars"]["id"],
-            config.category_info["ongoing_seminars2"]["id"],
-        ]
+    @registered_server_only()
+    @specific_states_only(
+        states=[SeminarState.PENDING, SeminarState.ONGOING, SeminarState.PAUSED]
     )
     @textchannel_only()
     @slash_command(
         name="rename",
         description="ゼミを改名します。テキストチャンネルとロールの名前が変化します。",
-        guild_ids=[config.guild_id],
     )
     async def rename(
         self,
@@ -58,10 +57,12 @@ class Rename(commands.Cog):
                 try:
                     (
                         await session.execute(
-                            select(Seminar).where(
+                            select(Seminar)
+                            .join(Category)
+                            .where(
                                 Seminar.name == new_name,
-                                Seminar.seminar_state != SeminarState.FINISHED,
-                                Seminar.server_id == ctx.guild_id,
+                                Category.state != SeminarState.FINISHED,
+                                Category.guild_id == ctx.guild_id,
                             )
                         )
                     ).scalar_one()
@@ -81,9 +82,11 @@ class Rename(commands.Cog):
                 try:
                     this_seminar: Seminar = (
                         await session.execute(
-                            select(Seminar).where(
+                            select(Seminar)
+                            .join(Category)
+                            .where(
                                 Seminar.channel_id == ctx.channel.id,
-                                Seminar.server_id == ctx.guild_id,
+                                Category.guild_id == ctx.guild_id,
                             )
                         )
                     ).scalar_one()
@@ -136,7 +139,14 @@ class Rename(commands.Cog):
                     this_seminar.name = new_name
 
         # edit the message that is already sent to role_settings channel
-        role_channel = ctx.guild.get_channel(config.channel_info["role_settings"]["id"])
+        # role_channel = ctx.guild.get_channel(config.channel_info["role_settings"]["id"])
+        async with async_session() as session:
+            guild_record = (
+                await session.execute(
+                    select(Guild).where(Guild.guild_id == ctx.guild_id)
+                )
+            ).scalar_one_or_none()
+        role_channel = ctx.guild.get_channel(guild_record.role_setting_channel_id)
         if not isinstance(role_channel, discord.TextChannel):
             embed = discord.Embed(
                 title="<:x:960095353577807883> システムエラー",
@@ -174,6 +184,14 @@ class Rename(commands.Cog):
     async def rename_error(
         self, ctx: discord.ApplicationContext, error: commands.CheckFailure
     ):
+        if isinstance(error, ConfigurationNotCompleteException):
+            embed = discord.Embed(
+                title="<:x:960095353577807883> サーバー設定ができていません",
+                description="管理者に `/setting` で設定を依頼してください。",
+                color=discord.Colour.red(),
+            )
+            await ctx.respond(embed=embed)
+            return
         if isinstance(error, InvalidChannelTypeException):
             embed = discord.Embed(
                 title="<:x:960095353577807883> 不正な操作です",
@@ -185,7 +203,7 @@ class Rename(commands.Cog):
         if isinstance(error, InvalidCategoryException):
             embed = discord.Embed(
                 title="<:x:960095353577807883> 不正な操作です",
-                description=f'{config.category_info["pending_seminars"]["name"]}または{config.category_info["ongoing_seminars"]["name"]}にあるテキストチャンネルでのみ実行可能です。',
+                description="《ゼミ(仮立て)》または《ゼミ(本運用)》にあるテキストチャンネルでのみ実行可能です。",
                 color=discord.Colour.red(),
             )
             await ctx.respond(embed=embed)

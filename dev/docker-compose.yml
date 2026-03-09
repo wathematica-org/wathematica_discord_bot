@@ -8,6 +8,9 @@ services:
       - type: bind
         source: ../wathematica_discord_bot
         target: /app_root
+      - type: bind
+        source: ../data
+        target: /data
     working_dir: /app_root
     secrets:
       - discord_token

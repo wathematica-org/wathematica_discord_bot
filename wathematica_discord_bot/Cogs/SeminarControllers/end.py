@@ -104,7 +104,7 @@ class End(commands.Cog):
             return
 
         # move the text channel to the finished_seminars category
-        finished_seminar_category = await utils.get_category(SeminarState.FINISHED)
+        finished_seminar_category = await utils.get_category(ctx, SeminarState.FINISHED)
         if not isinstance(finished_seminar_category, discord.CategoryChannel):
             embed = discord.Embed(
                 title="<:x:960095353577807883> システムエラー",
